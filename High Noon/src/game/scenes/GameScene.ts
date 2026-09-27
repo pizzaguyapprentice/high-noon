@@ -3,6 +3,7 @@ import * as Phaser from 'phaser';
 export class GameScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Rectangle;
   private playerBody!: Phaser.Physics.Arcade.Body;
+  private bulletBody!: Phaser.Physics.Arcade.Body;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private speed = 160;
@@ -28,6 +29,14 @@ export class GameScene extends Phaser.Scene {
 
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as any;
+
+    this.input.on('pointerdown', () => {
+      const pointer = this.input.activePointer;
+      const bullet = this.add.rectangle(this.player.x, this.player.y, 5, 5, 0x0);
+
+      this.physics.add.existing(bullet);
+      this.physics.moveTo(bullet, pointer.worldX, pointer.worldY, 400);
+    })
   }
 
   update() {
