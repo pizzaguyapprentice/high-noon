@@ -36,6 +36,10 @@ export class GameScene extends Phaser.Scene {
 
       this.physics.add.existing(bullet);
       this.physics.moveTo(bullet, pointer.worldX, pointer.worldY, 400);
+
+      this.physics.add.collider(bullet, walls, () => {
+        bullet.destroy();
+      });
     })
   }
 
