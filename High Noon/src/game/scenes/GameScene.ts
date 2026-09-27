@@ -27,7 +27,7 @@ export class GameScene extends Phaser.Scene {
     ];
     this.walls.forEach(w => this.physics.add.existing(w, true));
 
-    this.player = this.add.rectangle(100, 100, 16, 16, 0xffcc00);
+    this.player = this.add.rectangle(100, 100, 16, 16, 0x0f4d0f);
     this.physics.add.existing(this.player);
     //make the pickups
     this.pickups = this.physics.add.group();
@@ -46,12 +46,15 @@ export class GameScene extends Phaser.Scene {
         );
       }
 
-      const pickup = this.add.rectangle(
+      const pickup = this.add.text(
         spawnX,
         spawnY,
-        12,
-        12,
-        0x44dd88
+        '€',
+          {
+            color: 'white',
+            backgroundColor: 'green',
+            fontSize: "30px"
+          }
       );
       this.physics.add.existing(pickup);
 
@@ -64,7 +67,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     //score display
-    this.scoretext = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', color: '#000' });
+    this.scoretext = this.add.text(16, 16, 'Money: €0', { fontSize: '32px', color: '#000' });
 
     this.playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     this.playerBody.setCollideWorldBounds(true);
@@ -129,7 +132,7 @@ export class GameScene extends Phaser.Scene {
   private CollectPickup(_player: Phaser.GameObjects.GameObject, pickup: Phaser.GameObjects.GameObject) {
     //collect pickup and update score
     this.score += 10;
-    this.scoretext.setText('Score: ' + this.score);
+    this.scoretext.setText('Money: €' + this.score);
     pickup.destroy();
   }
 }
