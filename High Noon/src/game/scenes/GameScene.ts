@@ -19,6 +19,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+
+
+
     this.cameras.main.setBackgroundColor('#c2a36b');
 
     this.walls = [
@@ -83,6 +86,10 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.shootAt(pointer.worldX, pointer.worldY);
     });
+
+    if (!this.sound.get('bgmusichill')?.isPlaying) {
+      this.sound.add('bgmusichill', { loop: true, volume: 0.05 }).play();
+    }
   }
 
   private shootAt(targetX: number, targetY: number) {
@@ -133,7 +140,7 @@ export class GameScene extends Phaser.Scene {
     //collect pickup and update score
     this.score += 10;
     this.scoretext.setText('Money: €' + this.score);
-    this.sound.play('moneypickup',{ volume: 0.3,detune:Phaser.Math.Between(-100, 100)});
+    this.sound.play('moneypickup',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
     pickup.destroy();
   }
 }

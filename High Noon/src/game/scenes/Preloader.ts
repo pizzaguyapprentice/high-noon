@@ -36,6 +36,7 @@ export class Preloader extends Scene
 
         this.load.audio('introjingle','sounds/sfx/introjingle.mp3');
         this.load.audio('moneypickup','sounds/sfx/money/moneypickup.mp3');
+        this.load.audio('bgmusichill', 'sounds/music/bgmusichill.mp3');
     }
 
     create ()
