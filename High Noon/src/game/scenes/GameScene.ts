@@ -9,6 +9,10 @@ export class GameScene extends Phaser.Scene {
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private shotTimes: number[] = [];
   private speed = 160;
+  private pickups!: Phaser.Physics.Arcade.Group;
+  private scoretext!: Phaser.GameObjects.Text;
+  private score: number = 0;
+
 
   constructor() {
     super('GameScene');
@@ -25,9 +29,49 @@ export class GameScene extends Phaser.Scene {
 
     this.player = this.add.rectangle(100, 100, 16, 16, 0xffcc00);
     this.physics.add.existing(this.player);
+    //make the pickups
+    this.pickups = this.physics.add.group();
+    for (let index = 0; index < 6; index += 1) {
+      //random pickup spawn positions
+      let spawnX = 0;
+      let spawnY = 0;
+      let overlapsWall = true;
+      //CHECK FOR WALLS
+      while (overlapsWall) {
+        spawnX = Phaser.Math.Between(24, this.scale.width - 24);
+        spawnY = Phaser.Math.Between(24, this.scale.height - 24);
+        const pickupBounds = new Phaser.Geom.Rectangle(spawnX - 6, spawnY - 6, 12, 12);
+        overlapsWall = this.walls.some(wall =>
+          Phaser.Geom.Intersects.RectangleToRectangle(pickupBounds, wall.getBounds())
+        );
+      }
+
+      const pickup = this.add.rectangle(
+        spawnX,
+        spawnY,
+        12,
+        12,
+        0x44dd88
+      );
+      this.physics.add.existing(pickup);
+
+      //pickup movement and bouncing
+      const pickupBody = pickup.body as Phaser.Physics.Arcade.Body;
+      pickupBody.setCollideWorldBounds(true);
+      pickupBody.setBounce(1);
+      pickupBody.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-100, 100));
+      this.pickups.add(pickup);
+    }
+
+    //score display
+    this.scoretext = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', color: '#000' });
+
     this.playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     this.playerBody.setCollideWorldBounds(true);
     this.physics.add.collider(this.player, this.walls);
+    //pickup collision logic
+    this.physics.add.collider(this.pickups, this.walls);
+    this.physics.add.overlap(this.player, this.pickups, this.CollectPickup, undefined, this);
 
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as any;
@@ -77,7 +121,15 @@ export class GameScene extends Phaser.Scene {
       Number(right) - Number(left),
       Number(down) - Number(up)
     ).normalize();
+    
 
     this.playerBody.setVelocity(dir.x * this.speed, dir.y * this.speed);
+  }
+
+  private CollectPickup(_player: Phaser.GameObjects.GameObject, pickup: Phaser.GameObjects.GameObject) {
+    //collect pickup and update score
+    this.score += 10;
+    this.scoretext.setText('Score: ' + this.score);
+    pickup.destroy();
   }
 }
