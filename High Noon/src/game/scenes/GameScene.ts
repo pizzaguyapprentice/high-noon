@@ -133,6 +133,7 @@ export class GameScene extends Phaser.Scene {
     //collect pickup and update score
     this.score += 10;
     this.scoretext.setText('Money: €' + this.score);
+    this.sound.play('moneypickup',{ volume: 0.3,detune:Phaser.Math.Between(-100, 100)});
     pickup.destroy();
   }
 }
