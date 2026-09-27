@@ -39,11 +39,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   private shootAt(targetX: number, targetY: number) {
+    //math stuff for bullet direction and spread
     const bullet = this.add.rectangle(this.player.x, this.player.y, 5, 5, 0x0);
     const directionX = targetX - this.player.x;
     const directionY = targetY - this.player.y;
     const distance = Math.sqrt(directionX ** 2 + directionY ** 2);
     const now = this.time.now;
+    //timer for accuracy
     this.shotTimes = this.shotTimes.filter(shotTime => now - shotTime < 3000);
     const isAccurate = this.shotTimes.length < 2;
     this.shotTimes.push(now);
@@ -60,6 +62,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update() {
+    //all input logic here
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
       const pointer = this.input.activePointer;
       this.shootAt(pointer.worldX, pointer.worldY);
