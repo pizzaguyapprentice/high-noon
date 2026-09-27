@@ -24,9 +24,10 @@ export class MainMenu extends Scene
         }).setOrigin(0.5);
 
         this.input.once('pointerdown', () => {
-
+            this.sound.play('introjingle',{ volume: 0.3 });
             this.scene.start('GameScene');
 
         });
+        
     }
 }
