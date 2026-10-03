@@ -22,16 +22,26 @@ export class GameScene extends Phaser.Scene {
   private spreadPerShot = 16; // in pixels
   private maxSpread = 120; //in pixels
   private bulletSpeed = 2000; // in pixels per second
-  private cursorCooldown = 1200; // in milliseconds, how long to wait before the circle shrinks again
+  private cursorCooldown = 1200; // in milliseconds, how long to wait before the circle shrinks again for each shot
 
-
+  //Reloading variables
+  private maxAmmo = 6;
+  private reloadTime = 500; // in milliseconds per bullet
+  private ammo = 6
+  private isReloading = false;
+  private reloadTimer?: Phaser.Time.TimerEvent;
+  private reloadKey!: Phaser.Input.Keyboard.Key;
+  private ammoText!: Phaser.GameObjects.Text; // displaying amount of ammo
 
   constructor() {
     super('GameScene');
   }
 
   create() {
+    this.reloadKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
+    this.ammoText = this.add.text(16,52,'', {fontSize:'24px',color:'#000'});
+    this.updateAmmoText();
     //Creating the cursor aimer
     this.aimCircle = this.add.circle(0, 0, this.aimRadius, 0xff0000, 0.25).setStrokeStyle(1, 0xff0000, 0.5).setDepth(10);
     this.input.setDefaultCursor('crosshair')
@@ -109,6 +119,20 @@ export class GameScene extends Phaser.Scene {
 
   private shootAt(targetX: number, targetY: number) {
 
+    // dynamic reloading and shooting
+    if (this.isReloading) {
+      if(this.ammo > 0){
+        this.stopReload(); // stopping reloading, starting shooting
+      }else{
+        return; // out of ammo
+      }
+    }
+    if (this.ammo <= 0) {
+      return; // out of ammo
+    }
+    this.ammo -= 1;
+    this.updateAmmoText();
+  
      const now = this.time.now;
      const spread = this.getSpread(now);
     //math stuff for bullet direction and spread
@@ -130,12 +154,13 @@ export class GameScene extends Phaser.Scene {
     // const spreadTargetX = distance > 0 ? targetX - (directionY / distance) * spread : targetX;
     // const spreadTargetY = distance > 0 ? targetY + (directionX / distance) * spread : targetY;
 
-
+    this.sound.play('sixshootershot',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
     const bullet = this.add.rectangle(this.player.x, this.player.y, 5, 5, 0x0);
     this.physics.add.existing(bullet);
     this.physics.moveTo(bullet, spreadTargetX, spreadTargetY, this.bulletSpeed);
     // coliding with walls and destroying the bullet
     this.physics.add.collider(bullet, this.walls, () => {
+      this.sound.play(`ricochet-${Phaser.Math.Between(1, 22)}`,{volume:0.3});
       bullet.destroy();
     });
   }
@@ -168,6 +193,9 @@ export class GameScene extends Phaser.Scene {
     this.aimCircle.setPosition(pointer.worldX, pointer.worldY);
     console.log("SHOT TIMES AND TARGET RADIUS");
     console.log(this.shotTimes.length, targetRadius);
+    if (Phaser.Input.Keyboard.JustDown(this.reloadKey)) {
+      this.startReload();
+    } 
   }
 
   private CollectPickup(_player: Phaser.GameObjects.GameObject, pickup: Phaser.GameObjects.GameObject) {
@@ -180,7 +208,50 @@ export class GameScene extends Phaser.Scene {
 
   private getSpread(now: number): number {
     const recentShots = this.shotTimes.filter(shotTime => this.time.now - shotTime < this.cursorCooldown).length;
-    const extraShots = Math.max(0, recentShots - 1);
-    return Math.min(this.minimumSpread + extraShots * this.spreadPerShot, this.maxSpread);
+    return Math.min(this.minimumSpread + recentShots * this.spreadPerShot, this.maxSpread);
   }
+
+  private startReload(){
+    if (this.isReloading || this.ammo >= this.maxAmmo) {
+      return;
+  }
+  this.isReloading = true;
+  // reduce player speed while reloading
+  if(this.isReloading == true){
+    this.speed = 80; 
+  }
+  else{
+    
+  }
+
+    this.reloadTimer = this.time.addEvent({
+      delay: this.reloadTime,
+      loop: true,
+      callback: () => {
+        this.ammo += 1;
+        this.sound.play('sixshooterinsert',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
+  this.updateAmmoText();
+        if (this.ammo >= this.maxAmmo) {
+          this.stopReload();
+        }else{
+          this.updateAmmoText();
+        }
+      }
+    });
+  }
+
+  private stopReload() {
+    //reseting speed
+    this.speed = 160;
+    this.isReloading = false;
+    this.reloadTimer?.remove();
+    this.reloadTimer = undefined;
+    this.updateAmmoText();
+    this.sound.play('sixshootercylinder',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
+  }
+  private updateAmmoText() {
+    const text = this.isReloading ? 'Reloading : ' : 'Ammo: ';
+    this.ammoText.setText(text + this.ammo + '/' + this.maxAmmo);
+  }
+
 }

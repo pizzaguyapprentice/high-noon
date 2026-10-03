@@ -31,12 +31,16 @@ export class Preloader extends Scene
     {
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
-
+        for (let i = 1; i <= 22; i++) {
+            this.load.audio(`ricochet-${i}`, `sounds/sfx/gunshots/ricochets/ricochet-${i}.mp3`);
+        }
         this.load.image('logo', 'logo.png');
-
+        this.load.audio('sixshootershot','sounds/sfx/gunshots/revolver/sixshootershot.mp3');
         this.load.audio('introjingle','sounds/sfx/introjingle.mp3');
         this.load.audio('moneypickup','sounds/sfx/money/moneypickup.mp3');
         this.load.audio('bgmusichill', 'sounds/music/bgmusichill.mp3');
+        this.load.audio('sixshootercylinder', 'sounds/sfx/gunshots/revolver/cylinder.mp3');
+        this.load.audio('sixshooterinsert', 'sounds/sfx/gunshots/revolver/bullet.mp3');
     }
 
     create ()
