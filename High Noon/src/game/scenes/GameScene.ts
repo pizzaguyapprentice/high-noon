@@ -6,6 +6,8 @@ export class GameScene extends Phaser.Scene {
   private player!: Phaser.GameObjects.Rectangle;
   private playerBody!: Phaser.Physics.Arcade.Body;
   private walls!: Phaser.GameObjects.Rectangle[];
+  private enemies!: Phaser.GameObjects.Rectangle[];
+  private enemySpeed = 60;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private spaceKey!: Phaser.Input.Keyboard.Key;
@@ -104,6 +106,30 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.pickups, this.walls);
     this.physics.add.overlap(this.player, this.pickups, this.CollectPickup, undefined, this);
 
+
+    //enemy spawn
+    this.enemies = [
+    this.add.rectangle(800, 100, 20, 20, 0xFF2020),
+    this.add.rectangle(800, 200, 20, 20, 0xFF2020),
+    this.add.rectangle(800, 300, 20, 20, 0xFF2020),
+    this.add.rectangle(800, 400, 20, 20, 0xFF2020),
+    this.add.rectangle(800, 500, 20, 20, 0xFF2020),
+    this.add.rectangle(800, 600, 20, 20, 0xFF2020),
+    ]
+    
+    this.enemies.forEach(enemy => {
+    this.physics.add.existing(enemy);
+      const enemyBody = enemy.body as Phaser.Physics.Arcade.Body;
+      enemyBody.setCollideWorldBounds(true);
+    });
+    this.physics.add.collider(this.enemies, this.walls);
+    this.physics.add.collider(this.enemies, this.enemies);
+
+    //game over if enemies capture you
+    this.physics.add.overlap(this.player, this.enemies, () =>{
+      this.scene.start('GameOver');
+    });
+
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as any;
     this.spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -163,6 +189,11 @@ export class GameScene extends Phaser.Scene {
       this.sound.play(`ricochet-${Phaser.Math.Between(1, 22)}`,{volume:0.3});
       bullet.destroy();
     });
+    //kill enemies will bullet
+    this.physics.add.overlap(bullet, this.enemies, (_bullet, enemy) =>{
+      bullet.destroy();
+      (enemy as Phaser.GameObject.Rectangle).destroy();
+    });
   }
 
   update() {
@@ -183,7 +214,15 @@ export class GameScene extends Phaser.Scene {
     ).normalize();
     
     this.playerBody.setVelocity(dir.x * this.speed, dir.y * this.speed);
-    
+    this.enemies.forEach(enemy => {
+    //if not dead follows player
+    if (enemy.active) {
+      this.physics.moveTo(
+      enemy, this.player.x, this.player.y, this.enemySpeed
+    );
+    }
+  })
+
     // crosshair aimer logic, this uses the current time based on recent shots fired.
     const pointer = this.input.activePointer;
     const targetRadius = this.getSpread(this.time.now);
