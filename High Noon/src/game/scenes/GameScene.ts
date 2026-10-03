@@ -23,7 +23,7 @@ export class GameScene extends Phaser.Scene {
   private minimumSpread = 24; // in pixels
   private spreadPerShot = 16; // in pixels
   private maxSpread = 120; //in pixels
-  private bulletSpeed = 2000; // in pixels per second
+  private bulletSpeed = 1500; // in pixels per second
   private cursorCooldown = 1200; // in milliseconds, how long to wait before the circle shrinks again for each shot
 
   //Reloading variables
@@ -43,6 +43,7 @@ export class GameScene extends Phaser.Scene {
     this.reloadKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
     this.ammoText = this.add.text(16,52,'', {fontSize:'24px',color:'#000'});
+    this.ammo = this.maxAmmo
     this.updateAmmoText();
     //Creating the cursor aimer
     this.aimCircle = this.add.circle(0, 0, this.aimRadius, 0xff0000, 0.25).setStrokeStyle(1, 0xff0000, 0.5).setDepth(10);
@@ -97,7 +98,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     //score display
-    this.scoretext = this.add.text(16, 16, 'Money: €0', { fontSize: '32px', color: '#000' });
+    this.scoretext = this.add.text(16, 16, 'Money: €' + this.score, { fontSize: '32px', color: '#000' });
 
     this.playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     this.playerBody.setCollideWorldBounds(true);
@@ -181,7 +182,7 @@ export class GameScene extends Phaser.Scene {
     // const spreadTargetY = distance > 0 ? targetY + (directionX / distance) * spread : targetY;
 
     this.sound.play('sixshootershot',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
-    const bullet = this.add.rectangle(this.player.x, this.player.y, 5, 5, 0x0);
+    const bullet = this.add.rectangle(this.player.x, this.player.y, 7, 7, 0x0);
     this.physics.add.existing(bullet);
     this.physics.moveTo(bullet, spreadTargetX, spreadTargetY, this.bulletSpeed);
     // coliding with walls and destroying the bullet
@@ -193,6 +194,10 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(bullet, this.enemies, (_bullet, enemy) =>{
       bullet.destroy();
       (enemy as Phaser.GameObject.Rectangle).destroy();
+
+      if(!this.enemies.some(enemy => enemy.active)){
+        this.scene.restart()
+      }
     });
   }
 
