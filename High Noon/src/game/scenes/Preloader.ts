@@ -41,6 +41,8 @@ export class Preloader extends Scene
         this.load.audio('bgmusichill', 'sounds/music/bgmusichill.mp3');
         this.load.audio('sixshootercylinder', 'sounds/sfx/gunshots/revolver/cylinder.mp3');
         this.load.audio('sixshooterinsert', 'sounds/sfx/gunshots/revolver/bullet.mp3');
+        this.load.audio('hitmark', 'sounds/sfx/gunshots/hitmark.mp3');
+        this.load.audio('gameover', 'sounds/sfx/gameover.mp3');
     }
 
     create ()
