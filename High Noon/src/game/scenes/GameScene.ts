@@ -16,6 +16,9 @@ export class GameScene extends Phaser.Scene {
   private pickups!: Phaser.Physics.Arcade.Group;
   private scoretext!: Phaser.GameObjects.Text;
   private score: number = 0;
+  private killtext!: Phaser.GameObjects.Text;
+  private kills: number = 0;
+
 
   //Shooting mechanics, cursor, bullet behaviour, bullet spread
   private aimCircle!: Phaser.GameObjects.Arc;
@@ -80,11 +83,12 @@ export class GameScene extends Phaser.Scene {
       const pickup = this.add.text(
         spawnX,
         spawnY,
-        '€',
+        '$',
           {
             color: 'white',
             backgroundColor: 'green',
-            fontSize: "30px"
+            fontSize: "22px",
+            padding: {left: 12, right: 12} 
           }
       );
       this.physics.add.existing(pickup);
@@ -98,7 +102,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     //score display
-    this.scoretext = this.add.text(16, 16, 'Money: €' + this.score, { fontSize: '32px', color: '#000' });
+    this.scoretext = this.add.text(16, 16, 'Cash: $' + this.score, { fontSize: '32px', color: '#000' });
+    this.killtext = this.add.text(900, 16, 'Kills: ' + this.kills, { fontSize: '22px', color: '#9c0b0b' });
 
     this.playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     this.playerBody.setCollideWorldBounds(true);
@@ -128,6 +133,8 @@ export class GameScene extends Phaser.Scene {
 
     //game over if enemies capture you
     this.physics.add.overlap(this.player, this.enemies, () =>{
+      this.score = 0
+      this.kills = 0
       this.scene.start('GameOver');
     });
 
@@ -195,6 +202,9 @@ export class GameScene extends Phaser.Scene {
       bullet.destroy();
       (enemy as Phaser.GameObject.Rectangle).destroy();
 
+      this.kills += 1
+      this.killtext.setText('Kills: ' + this.kills)
+
       if(!this.enemies.some(enemy => enemy.active)){
         this.scene.restart()
       }
@@ -245,7 +255,7 @@ export class GameScene extends Phaser.Scene {
   private CollectPickup(_player: Phaser.GameObjects.GameObject, pickup: Phaser.GameObjects.GameObject) {
     //collect pickup and update score
     this.score += 10;
-    this.scoretext.setText('Money: €' + this.score);
+    this.scoretext.setText('Cash: $' + this.score);
     this.sound.play('moneypickup',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
     pickup.destroy();
   }
