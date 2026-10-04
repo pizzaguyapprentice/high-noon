@@ -28,6 +28,9 @@ export class GameScene extends Phaser.Scene {
   private maxSpread = 120; //in pixels
   private bulletSpeed = 1500; // in pixels per second
   private cursorCooldown = 1200; // in milliseconds, how long to wait before the circle shrinks again for each shot
+  private range = 200;
+  private minCircleSize = 0.5
+  private maxCircleSize = 2.5
 
   //Reloading variables
   private maxAmmo = 6;
@@ -168,7 +171,9 @@ export class GameScene extends Phaser.Scene {
     this.updateAmmoText();
   
      const now = this.time.now;
-     const spread = this.getSpread(now);
+    //const cursorDistance = Phaser.Math.Distance.Between(this.player.x, this.player.y, targetX, targetY);
+    //const spread = this.getSpread(now, cursorDistance);
+    const spread = this.aimRadius;
     //math stuff for bullet direction and spread
    
     const directionX = targetX - this.player.x;
@@ -241,13 +246,14 @@ export class GameScene extends Phaser.Scene {
 
     // crosshair aimer logic, this uses the current time based on recent shots fired.
     const pointer = this.input.activePointer;
-    const targetRadius = this.getSpread(this.time.now);
+    const cursorDistance = Phaser.Math.Distance.Between(this.player.x, this.player.y, pointer.worldX, pointer.worldY);
+    const targetRadius = this.getSpread(this.time.now, cursorDistance);
     // Grows and shrinks the circle smooth 
     this.aimRadius = Phaser.Math.Linear(this.aimRadius, targetRadius, 0.2);
     this.aimCircle.setRadius(this.aimRadius);
     this.aimCircle.setPosition(pointer.worldX, pointer.worldY);
-    console.log("SHOT TIMES AND TARGET RADIUS");
-    console.log(this.shotTimes.length, targetRadius);
+    //console.log("SHOT TIMES AND TARGET RADIUS");
+    //console.log(this.shotTimes.length, targetRadius);
     if (Phaser.Input.Keyboard.JustDown(this.reloadKey)) {
       this.startReload();
     } 
@@ -261,9 +267,13 @@ export class GameScene extends Phaser.Scene {
     pickup.destroy();
   }
 
-  private getSpread(now: number): number {
+  private getSpread(now: number, distance: number): number {
     const recentShots = this.shotTimes.filter(shotTime => this.time.now - shotTime < this.cursorCooldown).length;
-    return Math.min(this.minimumSpread + recentShots * this.spreadPerShot, this.maxSpread);
+
+    const baseSpread = Math.min(this.minimumSpread + recentShots * this.spreadPerShot, this.maxSpread);
+
+    const distanceScale = Phaser.Math.Clamp(distance/this.range,this.minCircleSize,this.maxCircleSize, this.maxCircleSize);
+    return baseSpread * distanceScale;
   }
 
   private startReload(){
