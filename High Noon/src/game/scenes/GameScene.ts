@@ -5,14 +5,14 @@ export class GameScene extends Phaser.Scene {
 
   private player!: Phaser.GameObjects.Rectangle;
   private playerBody!: Phaser.Physics.Arcade.Body;
-  private walls!: Phaser.GameObjects.Rectangle[];
+  //private walls!: Phaser.GameObjects.Rectangle[];
   private enemies!: Phaser.GameObjects.Rectangle[];
   private enemySpeed = 60;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private shotTimes: number[] = [];
-  private speed = 160;
+  private speed = 100;
   private pickups!: Phaser.Physics.Arcade.Group;
   private scoretext!: Phaser.GameObjects.Text;
   private score: number = 0;
@@ -41,14 +41,42 @@ export class GameScene extends Phaser.Scene {
   private reloadKey!: Phaser.Input.Keyboard.Key;
   private ammoText!: Phaser.GameObjects.Text; // displaying amount of ammo
 
+  private wallLayer!: Phaser.Tilemaps.TilemapLayer;
+
   constructor() {
     super('GameScene');
   }
 
   create() {
+
+    // Initializing map
+    const map = this.make.tilemap({ key: 'testlevel' });
+    const deserttiles = map.addTilesetImage('deserttile1', 'deserttiles', 32,32);
+    const walltiles = map.addTilesetImage('walltile1', 'walltiles', 32,32);
+    const allTiles = [deserttiles!, walltiles!];
+
+    map.createLayer("Ground",allTiles);
+    this.wallLayer = map.createLayer("Walls",allTiles)!;
+    this.wallLayer.setCollisionByProperty({ collides: true });
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    //bullets move too fast, this fixes the collision issues
+    this.physics.world.TILE_BIAS = 32;
+    // Initializing player
+
+    this.player = this.add.rectangle(100, 100, 16, 16, 0x0f4d0f);
+    this.physics.add.existing(this.player);
+    this.playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    this.playerBody.setCollideWorldBounds(true);
+    this.physics.add.collider(this.player, this.wallLayer);
+   
+    this.physics.add.collider(this.player, this.wallLayer);
+    
+    
+
     this.reloadKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
-    this.ammoText = this.add.text(16,52,'', {fontSize:'24px',color:'#000'});
+    this.ammoText = this.add.text(16,52,'',{fontSize:'24px',color:'#000'}).setScrollFactor(0).setDepth(100);
     this.ammo = this.maxAmmo
     this.updateAmmoText();
     //Creating the cursor aimer
@@ -56,18 +84,23 @@ export class GameScene extends Phaser.Scene {
     this.input.setDefaultCursor('crosshair')
 
 
-    this.cameras.main.setBackgroundColor('#c2a36b');
+    // this.cameras.main.setBackgroundColor('#c2a36b');
 
-    this.walls = [
-      this.add.rectangle(300, 200, 200, 32, 0x6b4f2a),
-      this.add.rectangle(550, 400, 32, 200, 0x6b4f2a),
-    ];
-    this.walls.forEach(w => this.physics.add.existing(w, true));
+    // this.walls = [
+    //   this.add.rectangle(300, 200, 200, 32, 0x6b4f2a),
+    //   this.add.rectangle(550, 400, 32, 200, 0x6b4f2a),
+    // ];
+    // this.walls.forEach(w => this.physics.add.existing(w, true));
 
-    this.player = this.add.rectangle(100, 100, 16, 16, 0x0f4d0f);
-    this.physics.add.existing(this.player);
+   
+
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+
+
     //make the pickups
     this.pickups = this.physics.add.group();
+    this.physics.add.collider(this.pickups, this.wallLayer)
     for (let index = 0; index < 6; index += 1) {
       //random pickup spawn positions
       let spawnX = 0;
@@ -75,13 +108,12 @@ export class GameScene extends Phaser.Scene {
       let overlapsWall = true;
       //CHECK FOR WALLS
       while (overlapsWall) {
-        spawnX = Phaser.Math.Between(24, this.scale.width - 24);
-        spawnY = Phaser.Math.Between(24, this.scale.height - 24);
-        const pickupBounds = new Phaser.Geom.Rectangle(spawnX - 6, spawnY - 6, 12, 12);
-        overlapsWall = this.walls.some(wall =>
-          Phaser.Geom.Intersects.RectangleToRectangle(pickupBounds, wall.getBounds())
-        );
-      }
+          spawnX = Phaser.Math.Between(24,map.widthInPixels-24);
+          spawnY = Phaser.Math.Between(24,map.heightInPixels-24);
+          const tile = this.wallLayer.getTileAtWorldXY(spawnX,spawnY);
+          overlapsWall = !!tile && tile.collides;
+        } 
+      
 
       const pickup = this.add.text(
         spawnX,
@@ -105,25 +137,24 @@ export class GameScene extends Phaser.Scene {
     }
 
     //score display
-    this.scoretext = this.add.text(16, 16, 'Cash: $' + this.score, { fontSize: '32px', color: '#000' });
-    this.killtext = this.add.text(900, 16, 'Kills: ' + this.kills, { fontSize: '22px', color: '#9c0b0b' });
+    this.scoretext = this.add.text(16, 16, 'Cash: $' + this.score, { fontSize: '32px', color: '#000' }).setScrollFactor(0).setDepth(100);;
+    this.killtext = this.add.text(900, 16, 'Kills: ' + this.kills, { fontSize: '22px', color: '#9c0b0b' }).setScrollFactor(0).setDepth(100);;
 
-    this.playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    this.playerBody.setCollideWorldBounds(true);
-    this.physics.add.collider(this.player, this.walls);
+
+    //this.physics.add.collider(this.player, this.walls);
     //pickup collision logic
-    this.physics.add.collider(this.pickups, this.walls);
+   
     this.physics.add.overlap(this.player, this.pickups, this.CollectPickup, undefined, this);
 
 
     //enemy spawn
     this.enemies = [
-    this.add.rectangle(800, 100, 20, 20, 0xFF2020),
+    this.add.rectangle(800, 100, 16, 16, 0xFF2020),
     this.add.rectangle(800, 200, 20, 20, 0xFF2020),
-    this.add.rectangle(800, 300, 20, 20, 0xFF2020),
-    this.add.rectangle(800, 400, 20, 20, 0xFF2020),
-    this.add.rectangle(800, 500, 20, 20, 0xFF2020),
-    this.add.rectangle(800, 600, 20, 20, 0xFF2020),
+    this.add.rectangle(800, 300, 16, 16, 0xFF2020),
+    this.add.rectangle(800, 400, 16, 16, 0xFF2020),
+    this.add.rectangle(800, 500, 16, 16, 0xFF2020),
+    this.add.rectangle(800, 600, 16, 16, 0xFF2020),
     ]
     
     this.enemies.forEach(enemy => {
@@ -131,7 +162,7 @@ export class GameScene extends Phaser.Scene {
       const enemyBody = enemy.body as Phaser.Physics.Arcade.Body;
       enemyBody.setCollideWorldBounds(true);
     });
-    this.physics.add.collider(this.enemies, this.walls);
+    this.physics.add.collider(this.enemies, this.wallLayer);
     this.physics.add.collider(this.enemies, this.enemies);
 
     //game over if enemies capture you
@@ -195,17 +226,18 @@ export class GameScene extends Phaser.Scene {
 
     this.sound.play('sixshootershot',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
     const bullet = this.add.rectangle(this.player.x, this.player.y, 7, 7, 0x0);
+    
     this.physics.add.existing(bullet);
     this.physics.moveTo(bullet, spreadTargetX, spreadTargetY, this.bulletSpeed);
     // coliding with walls and destroying the bullet
-    this.physics.add.collider(bullet, this.walls, () => {
+    this.physics.add.collider(bullet, this.wallLayer, () => {
       this.sound.play(`ricochet-${Phaser.Math.Between(1, 22)}`,{volume:0.3});
       bullet.destroy();
     });
     //kill enemies will bullet
     this.physics.add.overlap(bullet, this.enemies, (_bullet, enemy) =>{
       bullet.destroy();
-      (enemy as Phaser.GameObject.Rectangle).destroy();
+      (enemy as Phaser.GameObjects.Rectangle).destroy();
 
       this.kills += 1
       this.killtext.setText('Kills: ' + this.kills)
@@ -233,8 +265,9 @@ export class GameScene extends Phaser.Scene {
       Number(right) - Number(left),
       Number(down) - Number(up)
     ).normalize();
+
+    this.playerBody.setVelocity(dir.x * this.speed, dir.y * this.speed)
     
-    this.playerBody.setVelocity(dir.x * this.speed, dir.y * this.speed);
     this.enemies.forEach(enemy => {
     //if not dead follows player
     if (enemy.active) {
@@ -272,7 +305,7 @@ export class GameScene extends Phaser.Scene {
 
     const baseSpread = Math.min(this.minimumSpread + recentShots * this.spreadPerShot, this.maxSpread);
 
-    const distanceScale = Phaser.Math.Clamp(distance/this.range,this.minCircleSize,this.maxCircleSize, this.maxCircleSize);
+    const distanceScale = Phaser.Math.Clamp(distance/this.range,this.minCircleSize,this.maxCircleSize);
     return baseSpread * distanceScale;
   }
 
@@ -307,7 +340,7 @@ export class GameScene extends Phaser.Scene {
 
   private stopReload() {
     //reseting speed
-    this.speed = 160;
+    this.speed = 100;
     this.isReloading = false;
     this.reloadTimer?.remove();
     this.reloadTimer = undefined;

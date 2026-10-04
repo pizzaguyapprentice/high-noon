@@ -43,6 +43,11 @@ export class Preloader extends Scene
         this.load.audio('sixshooterinsert', 'sounds/sfx/gunshots/revolver/bullet.mp3');
         this.load.audio('hitmark', 'sounds/sfx/gunshots/hitmark.mp3');
         this.load.audio('gameover', 'sounds/sfx/gameover.mp3');
+    
+        this.load.tilemapTiledJSON('testlevel', 'map/testlevel.json');
+        this.load.image('deserttiles', 'map/tiles/desert-tile-1.png');
+        this.load.image('walltiles', 'map/tiles/wall-tile-1.png');
+    
     }
 
     create ()

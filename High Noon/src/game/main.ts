@@ -12,7 +12,7 @@ const config: Phaser.Types.Core.GameConfig = {
   pixelArt: true,
   physics: {
     default: 'arcade',
-    arcade: { gravity: { x: 0, y: 0 }, debug: true },
+    arcade: { gravity: { x: 0, y: 0 }, debug: false },
   },
   scene: [Boot, Preloader, MainMenu, GameScene, GameOver],
 };

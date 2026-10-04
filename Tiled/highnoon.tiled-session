@@ -4,13 +4,25 @@
         "."
     ],
     "fileStates": {
+        "deserttiles.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
     },
-    "last.imagePath": "/home/pizzaguyapprentice/Documents/sprites/highnoonsprites",
+    "last.exportedFilePath": "/home/pizzaguyapprentice/Documents/high-noon/High Noon/public/assets/map",
+    "last.imagePath": "/home/pizzaguyapprentice/Documents/high-noon/High Noon/public/assets/map/tiles",
+    "map.height": 25,
+    "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
+    "map.lastUsedFormat": "tmx",
+    "map.width": 40,
     "openFiles": [
         "deserttiles.tsx"
     ],
     "project": "highnoon.tiled-project",
+    "property.type": "bool",
     "recentFiles": [
+        "deserttiles.tsx"
     ],
+    "tileset.embedInMap": true,
     "tileset.lastUsedFormat": "tsx"
 }
