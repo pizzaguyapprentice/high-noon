@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Deno / Celbridge build
+test_output/
+.celbridge/

@@ -1,0 +1,37 @@
+{
+  "tasks": {
+    "dev": "deno run --watch=src/,public/,tests/,index.html --allow-read --allow-write --allow-run --allow-env build.ts --watching",
+    "build": "deno run --allow-read --allow-write --allow-run --allow-env build.ts",
+    "test": "deno run --allow-read --allow-write --allow-run --allow-env tools/test_report.ts",
+    "check": "deno check --doc src/ tests/",
+    "lint": "deno lint src/ tests/",
+    "map": "deno run --allow-read --allow-write tools/tmx_to_json.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1",
+    "phaser": "npm:phaser@4.0.0"
+  },
+  "unstable": ["sloppy-imports"],
+  "nodeModulesDir": "none",
+  "exclude": ["src/vite-env.d.ts", "node_modules/", "dist/", "Tiled/"],
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "deno.ns"
+    ],
+    "noImplicitOverride": false,
+    "strictPropertyInitialization": false
+  },
+  "fmt": {
+    "lineWidth": 120
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  }
+}
