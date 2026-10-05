@@ -7,6 +7,8 @@ export class GameScene extends Phaser.Scene {
   private playerBody!: Phaser.Physics.Arcade.Body;
   //private walls!: Phaser.GameObjects.Rectangle[];
   private enemies!: Phaser.GameObjects.Rectangle[];
+  private enemyNextShotTimes = new Map<Phaser.GameObjects.Rectangle, number>();
+  private enemyShotsFired = new Map<Phaser.GameObjects.Rectangle, number>();
   private enemySpeed = 60;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
@@ -27,6 +29,10 @@ export class GameScene extends Phaser.Scene {
   private spreadPerShot = 16; // in pixels
   private maxSpread = 120; //in pixels
   private bulletSpeed = 1500; // in pixels per second
+  private enemyBulletSpeed = 500;
+  private enemyFireInterval = 2000;
+  private enemyReloadTime = 6000;
+  private enemySpread = 0.7; // radians of aim error on either side of the player
   private cursorCooldown = 1200; // in milliseconds, how long to wait before the circle shrinks again for each shot
   private range = 200;
   private minCircleSize = 0.5
@@ -161,6 +167,11 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.existing(enemy);
       const enemyBody = enemy.body as Phaser.Physics.Arcade.Body;
       enemyBody.setCollideWorldBounds(true);
+      this.enemyNextShotTimes.set(
+        enemy,
+        this.time.now + Phaser.Math.Between(0, this.enemyFireInterval)
+      );
+      this.enemyShotsFired.set(enemy, 0);
     });
     this.physics.add.collider(this.enemies, this.wallLayer);
     this.physics.add.collider(this.enemies, this.enemies);
@@ -275,6 +286,7 @@ export class GameScene extends Phaser.Scene {
       this.physics.moveTo(
       enemy, this.player.x, this.player.y, this.enemySpeed
     );
+      this.tryEnemyShoot(enemy);
     }
   })
 
@@ -299,6 +311,73 @@ export class GameScene extends Phaser.Scene {
     this.scoretext.setText('Cash: $' + this.score);
     this.sound.play('moneypickup',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
     pickup.destroy();
+  }
+
+  private tryEnemyShoot(enemy: Phaser.GameObjects.Rectangle) {
+    const now = this.time.now;
+    const nextShot = this.enemyNextShotTimes.get(enemy) ?? now;
+    if (now < nextShot || !this.hasLineOfSight(enemy)) {
+      return;
+    }
+
+    const shotsFired = (this.enemyShotsFired.get(enemy) ?? 0) + 1;
+    this.enemyShotsFired.set(enemy, shotsFired);
+    this.enemyNextShotTimes.set(
+      enemy,
+      now + (shotsFired >= 6 ? this.enemyReloadTime : this.enemyFireInterval)
+    );
+    if (shotsFired >= 6) {
+      this.enemyShotsFired.set(enemy, 0);
+    }
+
+    const direction = new Phaser.Math.Vector2(
+      this.player.x - enemy.x,
+      this.player.y - enemy.y
+    );
+    const inaccurateAngle = Phaser.Math.FloatBetween(
+      -this.enemySpread,
+      this.enemySpread
+    );
+    direction.rotate(inaccurateAngle).normalize();
+    const bullet = this.add.rectangle(enemy.x, enemy.y, 6, 6, 0xffd000);
+
+    this.physics.add.existing(bullet);
+    (bullet.body as Phaser.Physics.Arcade.Body).setVelocity(
+      direction.x * this.enemyBulletSpeed,
+      direction.y * this.enemyBulletSpeed
+    );
+    this.physics.add.collider(bullet, this.wallLayer, () => {
+      bullet.destroy();
+    });
+    this.physics.add.overlap(bullet, this.player, () => {
+      bullet.destroy();
+      this.score = 0;
+      this.kills = 0;
+      this.scene.start('GameOver');
+    });
+    this.time.delayedCall(3000, () => bullet.destroy());
+  }
+
+  private hasLineOfSight(enemy: Phaser.GameObjects.Rectangle): boolean {
+    const distance = Phaser.Math.Distance.Between(
+      enemy.x,
+      enemy.y,
+      this.player.x,
+      this.player.y
+    );
+    const steps = Math.ceil(distance / 8);
+
+    for (let step = 1; step < steps; step += 1) {
+      const progress = step / steps;
+      const x = Phaser.Math.Linear(enemy.x, this.player.x, progress);
+      const y = Phaser.Math.Linear(enemy.y, this.player.y, progress);
+      const tile = this.wallLayer.getTileAtWorldXY(x, y);
+      if (tile?.collides) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   private getSpread(now: number, distance: number): number {
