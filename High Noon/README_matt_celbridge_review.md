@@ -29,6 +29,7 @@ but the type errors are real problems in the code. Vite never checked types, so 
 | Replaced the template `README.md` (and its `screenshot.png`) | It described the npm commands. The new one points to `CELBRIDGE.md` and `README_deno_tooling.md`. |
 | Added `deno task map`, and a **map** button in the console | Converts the Tiled map to JSON for Phaser, without needing Tiled installed. |
 | Added `deno task serve` | Serves `dist/` at http://127.0.0.1:8000, for previewing in a browser without Celbridge. |
+| Added `public/fit-to-window.css` | Scales the page to fit the window or Celbridge's preview panel, so the game is never cut off. |
 
 ## Working without Celbridge
 
@@ -95,14 +96,18 @@ private CollectPickup(_player: Overlapping, pickup: Overlapping) {
 | `no-unused-vars` (2) | `GameScene.ts:212` (`distance`), `GameScene.ts:304` (`now`) | Delete the variables, or use them if something is missing. |
 | `no-empty` (1) | `GameScene.ts:322` | Remove the empty block, or add the code or a comment saying why it's empty. |
 
-### 3. Not yet checked inside Celbridge itself
+### 3. The Celbridge preview
 
-The build was tested through a local web server, not in Celbridge's side preview. Phaser loads its images, sounds
-and map at runtime, and browsers can block that when a page is opened as a plain file from disk.
+Celbridge's side preview loads the game, including its images and sounds, without needing a separate web server
+(checked in Celbridge on 5 Oct).
 
-*Recommended:* open `High Noon.celbridge` and check the game appears in the side preview. If it shows a blank
-or black screen, the preview is loading the page from disk and blocking the assets. Until that's sorted, preview
-it with `deno task serve` and a browser instead (see `README_deno_tooling.md`).
+The page now also scales to fit the preview panel. `public/fit-to-window.css` (linked from `public/index.html`)
+shrinks the game to fit as the panel is resized, keeping its shape, so nothing is cut off. Mouse clicks still land
+in the right place. It's the last stylesheet on the page, so it's easy to remove if you'd rather lay the page out
+yourselves.
+
+*Recommended:* nothing needed. If you change the page's layout (e.g. add a heading or a panel), check it still
+fits a narrow panel.
 
 ## Files for the Deno build
 
