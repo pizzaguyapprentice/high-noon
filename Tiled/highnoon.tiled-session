@@ -1,9 +1,26 @@
 {
-    "activeFile": "deserttiles.tsx",
+    "activeFile": "/home/pizzaguyapprentice/Documents/high-noon/High Noon/public/assets/map/testlevel.tmx",
     "expandedProjectPaths": [
         "."
     ],
     "fileStates": {
+        "": {
+            "scaleInEditor": 1
+        },
+        "/home/pizzaguyapprentice/Documents/high-noon/High Noon/public/assets/map/testlevel.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 615.5,
+                "y": 431
+            }
+        },
+        "/home/pizzaguyapprentice/Documents/high-noon/High Noon/public/assets/map/testlevel.tmx#deserttile1": {
+            "scaleInDock": 1
+        },
+        "/home/pizzaguyapprentice/Documents/high-noon/High Noon/public/assets/map/testlevel.tmx#walltile1": {
+            "scaleInDock": 1
+        },
         "deserttiles.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 1
@@ -16,11 +33,12 @@
     "map.lastUsedFormat": "tmx",
     "map.width": 40,
     "openFiles": [
-        "deserttiles.tsx"
+        "/home/pizzaguyapprentice/Documents/high-noon/High Noon/public/assets/map/testlevel.tmx"
     ],
     "project": "highnoon.tiled-project",
     "property.type": "bool",
     "recentFiles": [
+        "/home/pizzaguyapprentice/Documents/high-noon/High Noon/public/assets/map/testlevel.tmx",
         "deserttiles.tsx"
     ],
     "tileset.embedInMap": true,
