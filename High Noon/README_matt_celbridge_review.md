@@ -1,6 +1,7 @@
 # High Noon (team 1): Celbridge / Deno review
 
-Reviewed 2026-10-04 by Matt. Updated 2026-10-05 after the 11:00 deadline.
+Reviewed 2026-10-04 by Matt. Updated 2026-10-05 after the week 3 deadline (extended
+from 11:00 to 13:00 for this first week).
 
 **Code reviewed:** `main` at `a30555a` (Mon 5 Oct 10:37, Oscar Neiland: "adjusted sounds slightly, detunes etc,
 added death scream").
