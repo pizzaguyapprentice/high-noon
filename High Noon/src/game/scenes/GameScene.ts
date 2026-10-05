@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { calculateSpread } from './spread.ts';
 
 export class GameScene extends Phaser.Scene {
 
@@ -201,15 +202,14 @@ export class GameScene extends Phaser.Scene {
     this.ammo -= 1;
     this.updateAmmoText();
   
-     const now = this.time.now;
-    //const cursorDistance = Phaser.Math.Distance.Between(this.player.x, this.player.y, targetX, targetY);
-    //const spread = this.getSpread(now, cursorDistance);
-    const spread = this.aimRadius;
+    const now = this.time.now;
     //math stuff for bullet direction and spread
    
     const directionX = targetX - this.player.x;
     const directionY = targetY - this.player.y;
     const distance = Math.sqrt(directionX ** 2 + directionY ** 2);
+    this.shotTimes = this.shotTimes.filter(shotTime => now - shotTime < this.cursorCooldown);
+    const spread = this.getSpread(now, distance);
 
     const angle = Phaser.Math.FloatBetween(0, 2 * Math.PI);
     const radius = spread * Math.sqrt(Math.random());
@@ -217,8 +217,6 @@ export class GameScene extends Phaser.Scene {
     const spreadTargetY = targetY + Math.sin(angle) * radius;
     
     //testing different way of implementing varied spread OLD CODE BELOW
-    this.shotTimes = this.shotTimes.filter(shotTime => now - shotTime < 3000);
-    // const isAccurate = this.shotTimes.length < 2;
     this.shotTimes.push(now);
     // const spread = isAccurate ? 0 : Phaser.Math.FloatBetween(-distance * 0.1, distance * 0.1);
     // const spreadTargetX = distance > 0 ? targetX - (directionY / distance) * spread : targetX;
@@ -302,12 +300,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private getSpread(now: number, distance: number): number {
-    const recentShots = this.shotTimes.filter(shotTime => this.time.now - shotTime < this.cursorCooldown).length;
-
-    const baseSpread = Math.min(this.minimumSpread + recentShots * this.spreadPerShot, this.maxSpread);
-
-    const distanceScale = Phaser.Math.Clamp(distance/this.range,this.minCircleSize,this.maxCircleSize);
-    return baseSpread * distanceScale;
+    const recentShots = this.shotTimes.filter(shotTime => now - shotTime < this.cursorCooldown).length;
+    return calculateSpread(recentShots, distance, {
+      minimumSpread: this.minimumSpread,
+      spreadPerShot: this.spreadPerShot,
+      maxSpread: this.maxSpread,
+      range: this.range,
+      minCircleSize: this.minCircleSize,
+      maxCircleSize: this.maxCircleSize
+    });
   }
 
   private startReload(){
@@ -315,13 +316,9 @@ export class GameScene extends Phaser.Scene {
       return;
   }
   this.isReloading = true;
+  this.updateAmmoText();
   // reduce player speed while reloading
-  if(this.isReloading == true){
-    this.speed = 80; 
-  }
-  else{
-    
-  }
+  this.speed = 80; 
 
     this.reloadTimer = this.time.addEvent({
       delay: this.reloadTime,
