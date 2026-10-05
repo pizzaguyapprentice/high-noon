@@ -1,6 +1,13 @@
 # High Noon (team 1): Celbridge / Deno review
 
-Reviewed 2026-10-04 by Matt. Updated 2026-10-05: the project now uses Deno only.
+Reviewed 2026-10-04 by Matt. Updated 2026-10-05 after the 11:00 deadline.
+
+**Code reviewed:** `main` at `a30555a` (Mon 5 Oct 10:37, Oscar Neiland: "adjusted sounds slightly, detunes etc,
+added death scream").
+
+**New since the first review:** the sounds were adjusted (pitch variation), and a death scream was added
+(`public/assets/sounds/sfx/gunshots/death/`). Both load and play correctly in the Deno build. The issues below are
+unchanged.
 
 ## Summary
 
@@ -64,7 +71,7 @@ this.physics.add.overlap(this.player, this.pickups, this.CollectPickup, undefine
 ```
 
 Phaser can call an overlap callback with physics bodies or tiles as well as game objects, so
-`CollectPickup(_player: GameObject, pickup: GameObject)` (line 295) doesn't match the type Phaser expects.
+`CollectPickup(_player: GameObject, pickup: GameObject)` (line 296) doesn't match the type Phaser expects.
 
 *Recommended:* take the parameter type from Phaser's own callback type, and check for a game object inside the
 method (both checked with `deno check`):
@@ -85,8 +92,8 @@ private CollectPickup(_player: Overlapping, pickup: Overlapping) {
 |---|---|---|
 | `no-sloppy-imports` (6) | `src/main.ts:1`, `src/game/main.ts:2-6` | Add `.ts` to local imports, e.g. `import { Boot } from './scenes/Boot.ts'`. Then the `sloppy-imports` setting can come out of `deno.json`. |
 | `no-explicit-any` (1) | `GameScene.ts:176` | Replace `any` with the real type. |
-| `no-unused-vars` (2) | `GameScene.ts:212` (`distance`), `GameScene.ts:303` (`now`) | Delete the variables, or use them if something is missing. |
-| `no-empty` (1) | `GameScene.ts:321` | Remove the empty block, or add the code or a comment saying why it's empty. |
+| `no-unused-vars` (2) | `GameScene.ts:212` (`distance`), `GameScene.ts:304` (`now`) | Delete the variables, or use them if something is missing. |
+| `no-empty` (1) | `GameScene.ts:322` | Remove the empty block, or add the code or a comment saying why it's empty. |
 
 ### 3. Not yet checked inside Celbridge itself
 
