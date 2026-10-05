@@ -1,0 +1,32 @@
+# A shell console. When it opens it runs "deno task dev": build into dist/, run the tests, write
+# test_output/, then watch src/, public/ and tests/ and do it all again on every save.
+[session]
+type = "shell"
+
+[session.shell]
+script = "deno task dev"
+
+[[session.shortcut]]
+label = "build, test, and watch for changes (press Ctrl+C first if it is already running)"
+icon = "bs-arrow-repeat"
+text = "deno task dev"
+
+[[session.shortcut]]
+label = "build into dist/ and test, once"
+icon = "bs-hammer"
+text = "deno task build"
+
+[[session.shortcut]]
+label = "run the tests, once"
+icon = "bs-clipboard-check"
+text = "deno task test"
+
+[[session.shortcut]]
+label = "lint: look for likely mistakes and bad habits"
+icon = "bs-search"
+text = "deno task lint"
+
+[[session.shortcut]]
+label = "convert the Tiled map public/assets/map/testlevel.tmx to testlevel.json, for Phaser"
+icon = "bs-map"
+text = "deno task map public/assets/map/testlevel.tmx"

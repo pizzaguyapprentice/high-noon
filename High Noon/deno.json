@@ -1,0 +1,42 @@
+{
+  "tasks": {
+    "dev": "deno run --watch=src/,public/,tests/ --allow-read --allow-write --allow-run --allow-env build.ts --watching",
+    "build": "deno run --allow-read --allow-write --allow-run --allow-env build.ts",
+    "test": "deno run --allow-read --allow-write --allow-run --allow-env tools/test_report.ts",
+    "check": "deno check --doc src/ tests/",
+    "lint": "deno lint src/ tests/",
+    "map": "deno run --allow-read --allow-write tools/tmx_to_json.ts",
+    "serve": "deno run --allow-net --allow-read --allow-sys jsr:@std/http@^1/file-server dist --host 127.0.0.1 --port 8000 --no-dir-listing --header \"Cache-Control: no-cache\""
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1",
+    "phaser": "npm:phaser@4.0.0"
+  },
+  "unstable": [
+    "sloppy-imports"
+  ],
+  "exclude": [
+    "dist/",
+    "test_output/"
+  ],
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext",
+      "deno.ns"
+    ],
+    "noImplicitOverride": false,
+    "strictPropertyInitialization": false
+  },
+  "fmt": {
+    "lineWidth": 120
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  }
+}

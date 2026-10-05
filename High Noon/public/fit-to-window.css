@@ -1,0 +1,27 @@
+/* Fit the whole page to the window (or the Celbridge preview panel), so nothing is ever cut off: the page fills
+   the window exactly, and the game canvas shrinks to fit, keeping its shape.
+   The game still uses its full 1024 x 768 inside - only the display is scaled. */
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Phaser sets the canvas size in its style attribute, so these need !important. With width and height on auto,
+   the canvas keeps its shape while staying inside its container. */
+canvas {
+  display: block;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
