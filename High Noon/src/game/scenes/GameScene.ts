@@ -9,10 +9,19 @@ export class GameScene extends Phaser.Scene {
   private enemies!: Phaser.GameObjects.Rectangle[];
   private enemyNextShotTimes = new Map<Phaser.GameObjects.Rectangle, number>();
   private enemyShotsFired = new Map<Phaser.GameObjects.Rectangle, number>();
+  private enemyReloadUntil = new Map<Phaser.GameObjects.Rectangle, number>();
+  private enemyReloadBars = new Map<Phaser.GameObjects.Rectangle, Phaser.GameObjects.Graphics>();
+  private enemyReloadTexts = new Map<Phaser.GameObjects.Rectangle, Phaser.GameObjects.Text>();
   private enemySpeed = 60;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private spaceKey!: Phaser.Input.Keyboard.Key;
+  private dodgeKey!: Phaser.Input.Keyboard.Key;
+  private dodgeCooldown = 1500;
+  private lastDodgeAt = -Infinity;
+  private dodgeDuration = 300;
+  private dodgeDirection = new Phaser.Math.Vector2();
+  private invulnerableUntil = 0;
   private shotTimes: number[] = [];
   private speed = 100;
   private pickups!: Phaser.Physics.Arcade.Group;
@@ -44,8 +53,12 @@ export class GameScene extends Phaser.Scene {
   private ammo = 6
   private isReloading = false;
   private reloadTimer?: Phaser.Time.TimerEvent;
+  private playerReloadStartedAt = 0;
+  private playerReloadEndsAt = 0;
   private reloadKey!: Phaser.Input.Keyboard.Key;
   private ammoText!: Phaser.GameObjects.Text; // displaying amount of ammo
+  private playerReloadBar!: Phaser.GameObjects.Graphics;
+  private playerReloadText!: Phaser.GameObjects.Text;
 
   private wallLayer!: Phaser.Tilemaps.TilemapLayer;
 
@@ -81,10 +94,18 @@ export class GameScene extends Phaser.Scene {
     
 
     this.reloadKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.dodgeKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
     this.ammoText = this.add.text(16,52,'',{fontSize:'24px',color:'#000'}).setScrollFactor(0).setDepth(100);
     this.ammo = this.maxAmmo
     this.updateAmmoText();
+    this.playerReloadBar = this.add.graphics().setDepth(20);
+    this.playerReloadText = this.add.text(0, 0, '', {
+      fontSize: '11px',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(21);
     //Creating the cursor aimer
     this.aimCircle = this.add.circle(0, 0, this.aimRadius, 0xff0000, 0.25).setStrokeStyle(1, 0xff0000, 0.5).setDepth(10);
     this.input.setDefaultCursor('crosshair')
@@ -172,12 +193,22 @@ export class GameScene extends Phaser.Scene {
         this.time.now + Phaser.Math.Between(0, this.enemyFireInterval)
       );
       this.enemyShotsFired.set(enemy, 0);
+      this.enemyReloadBars.set(enemy, this.add.graphics().setDepth(20));
+      this.enemyReloadTexts.set(enemy, this.add.text(0, 0, '', {
+        fontSize: '11px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(21));
     });
     this.physics.add.collider(this.enemies, this.wallLayer);
     this.physics.add.collider(this.enemies, this.enemies);
 
     //game over if enemies capture you
     this.physics.add.overlap(this.player, this.enemies, () =>{
+      if (this.isInvulnerable()) {
+        return;
+      }
       this.score = 0
       this.kills = 0
       this.scene.start('GameOver');
@@ -278,7 +309,18 @@ export class GameScene extends Phaser.Scene {
       Number(down) - Number(up)
     ).normalize();
 
-    this.playerBody.setVelocity(dir.x * this.speed, dir.y * this.speed)
+    if (Phaser.Input.Keyboard.JustDown(this.dodgeKey)) {
+      this.startDodge(dir);
+    }
+
+    if (this.time.now < this.lastDodgeAt + this.dodgeDuration) {
+      this.playerBody.setVelocity(
+        this.dodgeDirection.x * this.speed * 4,
+        this.dodgeDirection.y * this.speed * 4
+      );
+    } else {
+      this.playerBody.setVelocity(dir.x * this.speed, dir.y * this.speed);
+    }
     
     this.enemies.forEach(enemy => {
     //if not dead follows player
@@ -303,6 +345,7 @@ export class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.reloadKey)) {
       this.startReload();
     } 
+    this.updateReloadIndicators();
   }
 
   private CollectPickup(_player: Phaser.GameObjects.GameObject, pickup: Phaser.GameObjects.GameObject) {
@@ -328,6 +371,7 @@ export class GameScene extends Phaser.Scene {
     );
     if (shotsFired >= 6) {
       this.enemyShotsFired.set(enemy, 0);
+      this.enemyReloadUntil.set(enemy, now + this.enemyReloadTime);
     }
 
     const direction = new Phaser.Math.Vector2(
@@ -351,6 +395,9 @@ export class GameScene extends Phaser.Scene {
     });
     this.physics.add.overlap(bullet, this.player, () => {
       bullet.destroy();
+      if (this.isInvulnerable()) {
+        return;
+      }
       this.score = 0;
       this.kills = 0;
       this.scene.start('GameOver');
@@ -380,6 +427,80 @@ export class GameScene extends Phaser.Scene {
     return true;
   }
 
+  private startDodge(direction: Phaser.Math.Vector2) {
+    if (this.time.now < this.lastDodgeAt + this.dodgeCooldown) {
+      return;
+    }
+
+    this.dodgeDirection.copy(direction);
+    if (this.dodgeDirection.lengthSq() === 0) {
+      this.dodgeDirection.set(
+        this.input.activePointer.worldX - this.player.x,
+        this.input.activePointer.worldY - this.player.y
+      ).normalize();
+    }
+    if (this.dodgeDirection.lengthSq() === 0) {
+      this.dodgeDirection.set(1, 0);
+    }
+
+    this.lastDodgeAt = this.time.now;
+    this.invulnerableUntil = this.time.now + this.dodgeDuration;
+    if (this.isReloading) {
+      this.stopReload();
+    }
+    this.ammo = Math.min(this.ammo + 1, this.maxAmmo);
+    this.updateAmmoText();
+  }
+
+  private isInvulnerable(): boolean {
+    return this.time.now < this.invulnerableUntil;
+  }
+
+  private updateReloadIndicators() {
+    const now = this.time.now;
+    this.playerReloadBar.clear();
+    this.playerReloadText.setVisible(this.isReloading);
+    if (this.isReloading) {
+      const duration = Math.max(this.playerReloadEndsAt - this.playerReloadStartedAt, 1);
+      const remaining = Math.max(this.playerReloadEndsAt - now, 0);
+      const progress = Phaser.Math.Clamp(1 - remaining / duration, 0, 1);
+      this.drawReloadBar(this.playerReloadBar, this.player.x, this.player.y - 22, progress, 0x2ecc71);
+      this.playerReloadText.setPosition(this.player.x, this.player.y - 31);
+      this.playerReloadText.setText(`${(remaining / 1000).toFixed(1)}s`);
+    }
+
+    this.enemies.forEach(enemy => {
+      const bar = this.enemyReloadBars.get(enemy);
+      const text = this.enemyReloadTexts.get(enemy);
+      if (!bar || !text) {
+        return;
+      }
+      bar.clear();
+      const remaining = Math.max((this.enemyReloadUntil.get(enemy) ?? 0) - now, 0);
+      const visible = enemy.active && remaining > 0;
+      text.setVisible(visible);
+      if (visible) {
+        this.drawReloadBar(bar, enemy.x, enemy.y - 22, 1 - remaining / this.enemyReloadTime, 0xe74c3c);
+        text.setPosition(enemy.x, enemy.y - 31);
+        text.setText(`${(remaining / 1000).toFixed(1)}s`);
+      }
+    });
+  }
+
+  private drawReloadBar(
+    bar: Phaser.GameObjects.Graphics,
+    x: number,
+    y: number,
+    progress: number,
+    color: number
+  ) {
+    const width = 36;
+    bar.fillStyle(0x222222, 0.85);
+    bar.fillRect(x - width / 2, y, width, 5);
+    bar.fillStyle(color, 1);
+    bar.fillRect(x - width / 2, y, width * progress, 5);
+  }
+
   private getSpread(now: number, distance: number): number {
     const recentShots = this.shotTimes.filter(shotTime => this.time.now - shotTime < this.cursorCooldown).length;
 
@@ -394,6 +515,8 @@ export class GameScene extends Phaser.Scene {
       return;
   }
   this.isReloading = true;
+  this.playerReloadStartedAt = this.time.now;
+  this.playerReloadEndsAt = this.playerReloadStartedAt + (this.maxAmmo - this.ammo) * this.reloadTime;
   // reduce player speed while reloading
   if(this.isReloading == true){
     this.speed = 80; 
@@ -424,6 +547,8 @@ export class GameScene extends Phaser.Scene {
     this.isReloading = false;
     this.reloadTimer?.remove();
     this.reloadTimer = undefined;
+    this.playerReloadStartedAt = 0;
+    this.playerReloadEndsAt = 0;
     this.updateAmmoText();
     this.sound.play('sixshootercylinder',{ volume: 0.2,detune:Phaser.Math.Between(-100, 100)});
   }
