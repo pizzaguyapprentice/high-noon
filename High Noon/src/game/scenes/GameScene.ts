@@ -241,7 +241,8 @@ export class GameScene extends Phaser.Scene {
 
       this.kills += 1
       this.killtext.setText('Kills: ' + this.kills)
-      this.sound.play('hitmark',{volume:0.6})
+      this.sound.play('hitmark',{volume:Phaser.Math.FloatBetween(0.5, 0.7),detune:Phaser.Math.Between(-500, 500)})
+      this.sound.play('scream',{volume:Phaser.Math.FloatBetween(0.1, 0.2),detune:Phaser.Math.Between(-150, 800)})
 
       if(!this.enemies.some(enemy => enemy.active)){
         this.scene.restart()

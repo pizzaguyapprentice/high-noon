@@ -14,6 +14,7 @@ export class GameOver extends Scene
     create ()
     {
         this.sound.play('gameover',{volume:0.1})
+        this.sound.play('scream',{volume:0.04,detune:-200})
         this.camera = this.cameras.main
         this.camera.setBackgroundColor(0xff0000);
 
