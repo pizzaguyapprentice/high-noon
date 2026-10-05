@@ -73,7 +73,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.wallLayer);
     
     
-
+    
     this.reloadKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
 
     this.ammoText = this.add.text(16,52,'',{fontSize:'24px',color:'#000'}).setScrollFactor(0).setDepth(100);
@@ -229,6 +229,38 @@ export class GameScene extends Phaser.Scene {
     
     this.physics.add.existing(bullet);
     this.physics.moveTo(bullet, spreadTargetX, spreadTargetY, this.bulletSpeed);
+    
+    const bulletTravelDistance = Phaser.Math.Distance.Between(this.player.x, this.player.y, spreadTargetX, spreadTargetY);
+    const bulletTravelTime = (bulletTravelDistance / this.bulletSpeed) * 1000;
+    this.time.delayedCall(bulletTravelTime, () => {
+      if(!bullet.active){
+        return;
+      }
+      const body = bullet.body as Phaser.Physics.Arcade.Body;
+      body.stop();
+      //once the bullet has landed it cant hit anything
+      body.enable = false; 
+      bullet.setPosition(spreadTargetX, spreadTargetY);
+      const puff = this.add.circle(spreadTargetX, spreadTargetY, 3, 0xd9c49a, 0.8);
+      this.tweens.add({
+        targets: puff,
+        scale: 3,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => puff.destroy(),
+      });
+      this.tweens.add({
+        targets: bullet,
+        alpha: 0,
+        scale: 0.5,
+        duration: 200,
+        onComplete: () => {
+          bullet.destroy();
+        }
+      });
+
+    });
+    
     // coliding with walls and destroying the bullet
     this.physics.add.collider(bullet, this.wallLayer, () => {
       this.sound.play(`ricochet-${Phaser.Math.Between(1, 22)}`,{volume:0.3});
