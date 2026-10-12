@@ -29,6 +29,7 @@ export class GameScene extends Phaser.Scene {
   private score: number = 0;
   private killtext!: Phaser.GameObjects.Text;
   private kills: number = 0;
+  private bountytext!:Phaser.GameObjects.Text;
 
 
   //Shooting mechanics, cursor, bullet behaviour, bullet spread
@@ -166,6 +167,7 @@ export class GameScene extends Phaser.Scene {
     //score display
     this.scoretext = this.add.text(16, 16, 'Cash: $' + this.score, { fontSize: '32px', color: '#000' }).setScrollFactor(0).setDepth(100);;
     this.killtext = this.add.text(900, 16, 'Kills: ' + this.kills, { fontSize: '22px', color: '#9c0b0b' }).setScrollFactor(0).setDepth(100);;
+    this.bountytext = this.add.text(900, 45, 'Bounty: $' + this.kills * 10, { fontSize: '22px', color: '#9c0b0b' }).setScrollFactor(0).setDepth(100);;
 
 
     //this.physics.add.collider(this.player, this.walls);
@@ -315,6 +317,7 @@ export class GameScene extends Phaser.Scene {
 
       this.kills += 1
       this.killtext.setText('Kills: ' + this.kills)
+      this.bountytext.setText('Bounty: $' + this.kills * 10)
       this.sound.play('hitmark',{volume:Phaser.Math.FloatBetween(0.5, 0.7),detune:Phaser.Math.Between(-500, 500)})
       this.sound.play('scream',{volume:Phaser.Math.FloatBetween(0.1, 0.2),detune:Phaser.Math.Between(-150, 800)})
 
@@ -358,7 +361,10 @@ export class GameScene extends Phaser.Scene {
     //if not dead follows player
     if (enemy.active) {
       this.physics.moveTo(
-      enemy, this.player.x, this.player.y, this.enemySpeed
+      enemy, 
+      this.player.x, 
+      this.player.y, 
+      this.enemySpeed + Math.min(this.kills, 20) * 3
     );
       this.tryEnemyShoot(enemy);
     }
@@ -399,7 +405,8 @@ export class GameScene extends Phaser.Scene {
     this.enemyShotsFired.set(enemy, shotsFired);
     this.enemyNextShotTimes.set(
       enemy,
-      now + (shotsFired >= 6 ? this.enemyReloadTime : this.enemyFireInterval)
+      now + (shotsFired >= 6 ? this.enemyReloadTime 
+        : this.enemyFireInterval - Math.min(this.kills, 20) * 30)
     );
     if (shotsFired >= 6) {
       this.enemyShotsFired.set(enemy, 0);

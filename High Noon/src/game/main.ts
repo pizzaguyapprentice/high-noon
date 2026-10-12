@@ -6,6 +6,7 @@ import { GameScene } from './scenes/GameScene';
 import { GameOver } from './scenes/GameOver';
 
 const config: Phaser.Types.Core.GameConfig = {
+  autoFocus: false,
   type: Phaser.AUTO,
   width: 1024,
   height: 768,
