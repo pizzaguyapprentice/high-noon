@@ -96,8 +96,8 @@ export class GameScene extends Phaser.Scene {
     
     this.reloadKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.dodgeKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+    this.ammoText = this.add.text(16,52,'',{fontSize:'24px',color:'#e00606', backgroundColor: '#cdc3a5', padding: {x: 8, y: 4}}).setScrollFactor(0).setDepth(100);
 
-    this.ammoText = this.add.text(16,52,'',{fontSize:'24px',color:'#000'}).setScrollFactor(0).setDepth(100);
     this.ammo = this.maxAmmo
     this.updateAmmoText();
     this.playerReloadBar = this.add.graphics().setDepth(20);
@@ -165,9 +165,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     //score display
-    this.scoretext = this.add.text(16, 16, 'Cash: $' + this.score, { fontSize: '32px', color: '#000' }).setScrollFactor(0).setDepth(100);;
-    this.killtext = this.add.text(900, 16, 'Kills: ' + this.kills, { fontSize: '22px', color: '#9c0b0b' }).setScrollFactor(0).setDepth(100);;
-    this.bountytext = this.add.text(900, 45, 'Bounty: $' + this.kills * 10, { fontSize: '22px', color: '#9c0b0b' }).setScrollFactor(0).setDepth(100);;
+    this.scoretext = this.add.text(16, 16, 'Cash: $' + this.score, { fontSize: '32px', color: 'green', backgroundColor: '#cdc3a5', padding: {x: 8, y: 4}}).setScrollFactor(0).setDepth(100);;
+    this.killtext = this.add.text(850, 45, 'Kills: ' + this.kills, { fontSize: '22px', color: '#e00606', backgroundColor: '#2a2a2a', padding: {x: 8, y: 4}}).setScrollFactor(0).setDepth(100);;
+    this.bountytext = this.add.text(850, 16, 'Bounty: $' + this.kills * 10, { fontSize: '22px', color: '#e00606', backgroundColor: '#2a2a2a', padding: {x: 8, y: 4}}).setScrollFactor(0).setDepth(100);;
 
 
     //this.physics.add.collider(this.player, this.walls);
@@ -406,7 +406,7 @@ export class GameScene extends Phaser.Scene {
     this.enemyNextShotTimes.set(
       enemy,
       now + (shotsFired >= 6 ? this.enemyReloadTime 
-        : this.enemyFireInterval - Math.min(this.kills, 20) * 30)
+        : this.enemyFireInterval - Math.min(this.kills, 20) * 40)
     );
     if (shotsFired >= 6) {
       this.enemyShotsFired.set(enemy, 0);
