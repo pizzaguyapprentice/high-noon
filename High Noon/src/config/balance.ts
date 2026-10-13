@@ -1,0 +1,37 @@
+export const BALANCE = {
+  player: {
+    speed: 100,
+    reloadSpeed: 80,
+    dodgeCooldown: 1500,
+    dodgeDuration: 300,
+    dodgeMultiplier: 4,
+  },
+  revolver: {
+    maxAmmo: 6,
+    reloadPerBullet: 500,
+    bulletSpeed: 1500,
+    minSpread: 24,
+    spreadPerShot: 16,
+    maxSpread: 120,
+    cursorCooldown: 1200,
+    range: 200,
+    minCircleScale: 0.5,
+    maxCircleScale: 2.5,
+  },
+  enemy: {
+    speed: 60,
+    speedPerKill: 3,
+    bulletSpeed: 500,
+    fireInterval: 2000,
+    fireIntervalPerKill: 40,
+    reloadTime: 6000,
+    clipSize: 6,
+    spread: 0.7,
+    killScalingCap: 20,
+  },
+  economy: {
+    pickupValue: 10,
+    pickupCount: 6,
+    bountyPerKill: 10,
+  },
+} as const;
