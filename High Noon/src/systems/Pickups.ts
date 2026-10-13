@@ -2,7 +2,6 @@ import * as Phaser from 'phaser';
 import { BALANCE } from '../config/balance.ts';
 import { Level } from '../world/Level.ts';
 
-const MAX_DRIFT_SPEED = 100;
 
 export class Pickups {
   readonly group: Phaser.Physics.Arcade.Group;
@@ -36,10 +35,6 @@ export class Pickups {
       });
 
       this.group.add(pickup);
-      (pickup.body as Phaser.Physics.Arcade.Body).setVelocity(
-        Phaser.Math.Between(-MAX_DRIFT_SPEED, MAX_DRIFT_SPEED),
-        Phaser.Math.Between(-MAX_DRIFT_SPEED, MAX_DRIFT_SPEED),
-      );
     }
   }
 
