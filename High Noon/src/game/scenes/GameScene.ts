@@ -1,12 +1,12 @@
 import * as Phaser from 'phaser';
-import { Level } from '../world/Level';
-import { Player } from '../entities/Player';
-import { Projectiles } from '../systems/Projectiles';
-import { Revolver } from '../systems/Revolver';
-import { EnemyManager, SpawnPoint } from '../systems/EnemyManager';
-import { Pickups } from '../systems/Pickups';
-import { Hud } from '../ui/Hud';
-import { AimReticle } from '../ui/AimReticle';
+import { Level } from '../../world/Level.ts';
+import { Player } from '../../entities/Player.ts';
+import { Projectiles } from '../../systems/Projectiles.ts';
+import { Revolver } from '../../systems/Revolver.ts';
+import { EnemyManager, SpawnPoint } from '../../systems/EnemyManager.ts';
+import { Pickups } from '../../systems/Pickups.ts';
+import { Hud } from '../../ui/Hud.ts';
+import { AimReticle } from '../../ui/AimReticle.ts';
 
 const PLAYER_SPAWN = { x: 100, y: 100 };
 

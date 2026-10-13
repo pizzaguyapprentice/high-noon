@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../config/balance';
-import { Level } from '../world/Level';
+import { BALANCE } from '../config/balance.ts';
+import { Level } from '../world/Level.ts';
 
 const MAX_DRIFT_SPEED = 100;
 

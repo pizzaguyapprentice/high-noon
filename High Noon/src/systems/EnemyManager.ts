@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../config/balance';
-import { Enemy } from '../entities/Enemy';
-import { Level } from '../world/Level';
-import { Projectiles } from './Projectiles';
+import { BALANCE } from '../config/balance.ts';
+import { Enemy } from '../entities/Enemy.ts';
+import { Level } from '../world/Level.ts';
+import { Projectiles } from './Projectiles.ts';
 
 export interface SpawnPoint {
   x: number;

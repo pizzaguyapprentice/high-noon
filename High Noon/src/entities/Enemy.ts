@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../config/balance';
-import { ReloadBar } from '../ui/ReloadBar';
+import { BALANCE } from '../config/balance.ts';
+import { ReloadBar } from '../ui/ReloadBar.ts';
 
 /**
  * A single outlaw. Owns its own firing rhythm, clip, reload timer and reload bar.

@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../config/balance';
+import { BALANCE } from '../config/balance.ts';
 
 const ENEMY_BULLET_LIFETIME = 3000;
 

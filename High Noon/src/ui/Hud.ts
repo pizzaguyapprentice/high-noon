@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../config/balance';
+import { BALANCE } from '../config/balance.ts';
 
 const LIGHT_PANEL = { backgroundColor: '#cdc3a5', padding: { x: 8, y: 4 } };
 const DARK_PANEL = { backgroundColor: '#2a2a2a', padding: { x: 8, y: 4 } };

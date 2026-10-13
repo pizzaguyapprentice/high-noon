@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../config/balance';
-import { ReloadBar } from '../ui/ReloadBar';
-import { Projectiles } from './Projectiles';
+import { BALANCE } from '../config/balance.ts';
+import { ReloadBar } from '../ui/ReloadBar.ts';
+import { Projectiles } from './Projectiles.ts';
 
 export interface AmmoState {
   ammo: number;

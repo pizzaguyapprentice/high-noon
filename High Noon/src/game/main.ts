@@ -1,9 +1,9 @@
 import * as Phaser from 'phaser';
-import { Boot } from './scenes/Boot';
-import { Preloader } from './scenes/Preloader';
-import { MainMenu } from './scenes/MainMenu';
-import { GameScene } from './scenes/GameScene';
-import { GameOver } from './scenes/GameOver';
+import { Boot } from './scenes/Boot.ts';
+import { Preloader } from './scenes/Preloader.ts';
+import { MainMenu } from './scenes/MainMenu.ts';
+import { GameScene } from './scenes/GameScene.ts';
+import { GameOver } from './scenes/GameOver.ts';
 
 const config: Phaser.Types.Core.GameConfig = {
   autoFocus: false,

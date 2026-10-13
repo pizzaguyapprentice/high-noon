@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { Revolver } from '../systems/Revolver';
+import { Revolver } from '../systems/Revolver.ts';
 
 const SMOOTHING = 0.2;
 

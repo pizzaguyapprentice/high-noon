@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../config/balance';
+import { BALANCE } from '../config/balance.ts';
 
 type MoveKeys = Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
 
