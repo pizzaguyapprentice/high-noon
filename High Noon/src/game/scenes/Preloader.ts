@@ -1,7 +1,17 @@
 import { Scene } from 'phaser';
 
-export class Preloader extends Scene
-{
+const MAP_KEY = 'testlevel';
+const MAP_PATH = 'map/testlevel2.json'; 
+
+interface TiledTilesetJSON {
+  name: string;
+  image?: string;
+  source?: string;
+}
+
+
+
+export class Preloader extends Scene{
     constructor ()
     {
         super('Preloader');
@@ -45,9 +55,22 @@ export class Preloader extends Scene
         this.load.audio('scream', 'sounds/sfx/gunshots/death/scream.mp3');
         this.load.audio('gameover', 'sounds/sfx/gameover.mp3');
     
-        this.load.tilemapTiledJSON('testlevel', 'map/testlevel.json');
-        this.load.image('deserttiles', 'map/tiles/desert-tile-1.png');
-        this.load.image('walltiles', 'map/tiles/wall-tile-1.png');
+        //this.load.tilemapTiledJSON('testlevel', 'map/testlevel2.json');
+        this.load.once(
+        `filecomplete-tilemapJSON-${MAP_KEY}`,
+        (_key: string, _type: string, map: { tilesets: TiledTilesetJSON[] }) => {
+            const mapFolder = MAP_PATH.substring(0, MAP_PATH.lastIndexOf('/') + 1);
+
+            for (const tileset of map.tilesets) {
+            if (!tileset.image) {
+                console.error(`Tileset "${tileset.name}" is external (${tileset.source}). Embed it in Tiled.`);
+                continue;
+            }
+            this.load.image(tileset.name, mapFolder + tileset.image);
+            }
+        },
+        );
+        this.load.tilemapTiledJSON(MAP_KEY, MAP_PATH);
     
     }
 

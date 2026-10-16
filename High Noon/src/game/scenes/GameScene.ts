@@ -10,14 +10,14 @@ import { AimReticle } from '../../ui/AimReticle.ts';
 
 const PLAYER_SPAWN = { x: 100, y: 100 };
 
-const ENEMY_WAVE: SpawnPoint[] = [
-  { x: 800, y: 100 },
-  { x: 800, y: 200, size: 20 },
-  { x: 800, y: 300 },
-  { x: 800, y: 400 },
-  { x: 800, y: 500 },
-  { x: 800, y: 600 },
-];
+// const ENEMY_WAVE: SpawnPoint[] = [
+//   { x: 800, y: 100 },
+//   { x: 800, y: 200, size: 20 },
+//   { x: 800, y: 300 },
+//   { x: 800, y: 400 },
+//   { x: 800, y: 500 },
+//   { x: 800, y: 600 },
+// ];
 
 
 export class GameScene extends Phaser.Scene {
@@ -44,16 +44,18 @@ export class GameScene extends Phaser.Scene {
     this.level = new Level(this, 'testlevel');
     this.projectiles = new Projectiles(this, this.level.walls);
 
-    this.player = new Player(this, PLAYER_SPAWN.x, PLAYER_SPAWN.y, this.level.walls);
+    const playerSpawn = this.level.getSpawns('player')[0] ?? PLAYER_SPAWN;
+    this.player = new Player(this, playerSpawn.x, playerSpawn.y, this.level.walls);
+
     this.hud = new Hud(this);
     this.revolver = new Revolver(this, this.player, this.projectiles, ({ ammo, maxAmmo, reloading }) => {
       this.hud.setAmmo(ammo, maxAmmo, reloading);
     });
     this.reticle = new AimReticle(this, this.player, this.revolver);
 
-    this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles);
-    this.enemies.spawnWave(ENEMY_WAVE);
-
+    this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles);    
+    this.enemies.spawnWave(this.level.getSpawns("enemy"));
+    
     this.pickups = new Pickups(this, this.level, this.player, (value) => {
       this.score += value;
       this.hud.setCash(this.score);

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="3" nextobjectid="1">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="right-down" width="100" height="100" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="36">
+ <editorsettings>
+  <export target="testlevel2.json" format="json"/>
+ </editorsettings>
  <tileset firstgid="1" name="desert-tile-1" tilewidth="32" tileheight="32" tilecount="1" columns="1">
   <image source="tiles/desert-tile-1.png" width="32" height="32"/>
  </tileset>
@@ -128,7 +131,114 @@
 4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
 </data>
  </layer>
- <layer id="2" name="Wall" width="100" height="100">
+ <objectgroup id="3" name="Spawns">
+  <object id="1" name="enemy" x="1137.33" y="2346.67">
+   <point/>
+  </object>
+  <object id="2" name="enemy" x="1118.5" y="2165">
+   <point/>
+  </object>
+  <object id="3" name="enemy" x="989.333" y="1804">
+   <point/>
+  </object>
+  <object id="4" name="enemy" x="1442.67" y="1753.33">
+   <point/>
+  </object>
+  <object id="5" name="enemy" x="2283.33" y="917.333">
+   <point/>
+  </object>
+  <object id="6" name="enemy" x="2468" y="1033.33">
+   <point/>
+  </object>
+  <object id="7" name="enemy" x="2458.67" y="722.667">
+   <point/>
+  </object>
+  <object id="8" name="enemy" x="2156.67" y="575.333">
+   <point/>
+  </object>
+  <object id="9" name="enemy" x="2685.33" y="368">
+   <point/>
+  </object>
+  <object id="10" name="enemy" x="2710.67" y="87.3333">
+   <point/>
+  </object>
+  <object id="11" name="enemy" x="2846.67" y="146.667">
+   <point/>
+  </object>
+  <object id="12" name="enemy" x="2844" y="323.333">
+   <point/>
+  </object>
+  <object id="13" name="enemy" x="2786" y="588.667">
+   <point/>
+  </object>
+  <object id="14" name="enemy" x="2988.67" y="612">
+   <point/>
+  </object>
+  <object id="15" name="enemy" x="2827.33" y="664.667">
+   <point/>
+  </object>
+  <object id="16" name="enemy" x="3070" y="928">
+   <point/>
+  </object>
+  <object id="17" name="enemy" x="60" y="2963">
+   <point/>
+  </object>
+  <object id="18" name="enemy" x="68" y="2555">
+   <point/>
+  </object>
+  <object id="19" name="enemy" x="455" y="3132">
+   <point/>
+  </object>
+  <object id="20" name="enemy" x="1023" y="2742">
+   <point/>
+  </object>
+  <object id="21" name="enemy" x="607" y="2419">
+   <point/>
+  </object>
+  <object id="22" name="enemy" x="694" y="2097">
+   <point/>
+  </object>
+  <object id="23" name="enemy" x="217" y="1951">
+   <point/>
+  </object>
+  <object id="24" name="enemy" x="67" y="2133">
+   <point/>
+  </object>
+  <object id="25" name="enemy" x="490" y="2775">
+   <point/>
+  </object>
+  <object id="26" name="enemy" x="1282" y="2918">
+   <point/>
+  </object>
+  <object id="27" name="enemy" x="1200" y="3139">
+   <point/>
+  </object>
+  <object id="28" name="enemy" x="1213" y="807">
+   <point/>
+  </object>
+  <object id="29" name="enemy" x="864" y="872">
+   <point/>
+  </object>
+  <object id="30" name="enemy" x="539" y="242">
+   <point/>
+  </object>
+  <object id="31" name="enemy" x="685" y="285">
+   <point/>
+  </object>
+  <object id="32" name="enemy" x="1681" y="2469">
+   <point/>
+  </object>
+  <object id="33" name="enemy" x="1760" y="2388">
+   <point/>
+  </object>
+  <object id="34" name="enemy" x="1750" y="2104">
+   <point/>
+  </object>
+  <object id="35" name="player" x="1140" y="539">
+   <point/>
+  </object>
+ </objectgroup>
+ <layer id="2" name="Walls" width="100" height="100">
   <properties>
    <property name="collides" type="bool" value="true"/>
   </properties>

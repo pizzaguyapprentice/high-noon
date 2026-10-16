@@ -17,6 +17,7 @@ export class Projectiles {
     });
 
     scene.physics.add.collider(this.enemyBullets, walls, (bullet) => {
+      scene.sound.play(`ricochet-${Phaser.Math.Between(1, 22)}`, { volume: 0.3 });
       (bullet as Phaser.GameObjects.Rectangle).destroy();
     });
   }

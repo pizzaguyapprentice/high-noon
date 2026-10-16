@@ -63,6 +63,7 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
     if (!enemy.isReadyToFire(now)) {
       return;
     }
+    this.scene.sound.play('sixshootershot', { volume: 0.2, detune: Phaser.Math.Between(-100, 100) });
     enemy.registerShot(now, kills);
 
     const direction = new Phaser.Math.Vector2(this.target.x - enemy.x, this.target.y - enemy.y)
