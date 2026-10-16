@@ -47,11 +47,12 @@ export class GameScene extends Phaser.Scene {
     const playerSpawn = this.level.getSpawns('player')[0] ?? PLAYER_SPAWN;
     this.player = new Player(this, playerSpawn.x, playerSpawn.y, this.level.walls);
 
-    this.hud = new Hud(this);
+    this.hud = new Hud(this, this.player, this.level);
     this.revolver = new Revolver(this, this.player, this.projectiles, ({ ammo, maxAmmo, reloading }) => {
       this.hud.setAmmo(ammo, maxAmmo, reloading);
     });
     this.reticle = new AimReticle(this, this.player, this.revolver);
+    this.hud.minimap.ignore(this.reticle.circle);
 
     this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles);    
     this.enemies.spawnWave(this.level.getSpawns("enemy"));
@@ -83,6 +84,7 @@ export class GameScene extends Phaser.Scene {
     this.enemies.update(this.kills);
     this.reticle.update();
     this.revolver.update();
+    this.hud.playerDot.setPosition(this.player.x, this.player.y);
   }
 
   private setupCamera() {

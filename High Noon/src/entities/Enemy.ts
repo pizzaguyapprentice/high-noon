@@ -18,12 +18,16 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
   private shotsFired = 0;
   private reloadUntil = 0;
   private reloadBar: ReloadBar;
+  enemyDot;
 
   constructor(scene: Phaser.Scene, x: number, y: number, size = 16) {
     super(scene, x, y, size, size, 0xff2020);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.body.setCollideWorldBounds(true);
+    this.enemyDot = scene.add.circle(x, y, 50, 0x0);
+    this.enemyDot.setDepth(100);
+    scene.cameras.main.ignore(this.enemyDot);
 
     this.reloadBar = new ReloadBar(scene, 0xe74c3c);
     //Stagger the first shot so enemies don't all fire on the same frame
@@ -99,6 +103,7 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
   }
 
   updateReloadBar(now: number) {
+    this.enemyDot.setPosition(this.x, this.y);
     const remaining = this.reloadUntil - now;
     if (remaining > 0) {
       this.reloadBar.show(this.x, this.y, 1 - remaining / BALANCE.enemy.reloadTime, remaining);
@@ -108,6 +113,7 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
   }
 
   destroy(fromScene?: boolean) {
+    this.enemyDot?.destroy();
     this.reloadBar?.destroy();
     super.destroy(fromScene);
   }

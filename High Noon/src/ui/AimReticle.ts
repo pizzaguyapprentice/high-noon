@@ -5,7 +5,7 @@ const SMOOTHING = 0.2;
 
 
 export class AimReticle {
-  private circle: Phaser.GameObjects.Arc;
+  circle: Phaser.GameObjects.Arc;
   private currentRadius = 0;
 
   constructor(

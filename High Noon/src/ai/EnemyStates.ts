@@ -28,6 +28,7 @@ export const ENEMY_STATES: StateTable<Enemy, EnemyPerception, EnemyStateKey> = {
     },
     advancing:{
         enter:(enemy, p)=>{
+            enemy.enemyDot.setFillStyle(0xff0000);
             enemy.showAlert("!");
             enemy.delayFiring(p.now, BALANCE.enemy.reactionTime);
         },
