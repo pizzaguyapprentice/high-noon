@@ -55,6 +55,7 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
       if(enemy.aiState === "advancing"){
         this.tryShoot(enemy,now,kills);
       }
+      enemy.enemyDot.setPosition(enemy.x, enemy.y);
       enemy.updateReloadBar(now);
     }
   }

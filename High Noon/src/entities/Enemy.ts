@@ -103,7 +103,6 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
   }
 
   updateReloadBar(now: number) {
-    this.enemyDot.setPosition(this.x, this.y);
     const remaining = this.reloadUntil - now;
     if (remaining > 0) {
       this.reloadBar.show(this.x, this.y, 1 - remaining / BALANCE.enemy.reloadTime, remaining);
