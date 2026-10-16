@@ -28,6 +28,11 @@ export const BALANCE = {
     clipSize: 6,
     spread: 0.7,
     killScalingCap: 20,
+    loseRange:500,
+    detectRange: 500,      
+    reactionTime: 500,     
+    searchDuration: 6000,   
+    searchSpeedFactor: 0.75,
   },
   economy: {
     pickupValue: 10,

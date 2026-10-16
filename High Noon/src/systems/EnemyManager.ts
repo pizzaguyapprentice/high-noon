@@ -25,7 +25,7 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
     private level: Level,
     private target: Target,
     private projectiles: Projectiles,
-  ) {
+  ){
     super();
 
     this.group = scene.physics.add.group({ collideWorldBounds: true });
@@ -48,14 +48,19 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
   update(kills: number) {
     const now = this.scene.time.now;
     for (const enemy of this.group.getChildren() as Enemy[]) {
-      enemy.chase(this.target, kills);
-      this.tryShoot(enemy, now, kills);
+      const distance = Phaser.Math.Distance.Between(enemy.x,enemy.y,this.target.x,this.target.y);
+      const canSeeTarget = distance <= BALANCE.enemy.loseRange && this.level.hasLineOfSight(enemy,this.target);
+      enemy.think({now,target:this.target,kills,distance,canSeeTarget});
+
+      if(enemy.aiState === "advancing"){
+        this.tryShoot(enemy,now,kills);
+      }
       enemy.updateReloadBar(now);
     }
   }
 
   private tryShoot(enemy: Enemy, now: number, kills: number) {
-    if (!enemy.isReadyToFire(now) || !this.level.hasLineOfSight(enemy, this.target)) {
+    if (!enemy.isReadyToFire(now)) {
       return;
     }
     enemy.registerShot(now, kills);
