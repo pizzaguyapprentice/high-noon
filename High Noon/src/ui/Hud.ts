@@ -30,8 +30,8 @@ export class Hud {
     this.killText = this.pin(scene.add.text(850, 45, '', {
       fontSize: '22px', color: '#e00606', ...DARK_PANEL,
     }));
-    this.healthBar = scene.add.image(50, 125, 'health4')
-    .setDisplaySize(80,80)
+    this.healthBar = scene.add.image(70, 170, 'health4')
+    .setDisplaySize(120,120)
     .setScrollFactor(0)
     .setDepth(100);
     
@@ -65,9 +65,16 @@ export class Hud {
     this.minimap.centerY,
     this.minimap.width + 10,
     this.minimap.height + 10,  0x0);
+
     minimapBorder.setScrollFactor(0);
     minimapBorder.setDepth(100);
-    this.minimap.ignore(minimapBorder);    
+    this.minimap.ignore(minimapBorder); 
+    
+    scene.input.keyboard!.on('keydown-M', (event: KeyboardEvent) =>{
+      this.minimap.setVisible(!this.minimap.visible);
+      minimapBorder.setVisible(!minimapBorder.visible);
+      
+    })
 
     this.playerDot = scene.add.circle(player.x, player.y, 70, 0x0);
     this.playerDot.setDepth(100);
