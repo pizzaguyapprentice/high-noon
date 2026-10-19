@@ -11,6 +11,8 @@ export class Hud {
   private ammoText: Phaser.GameObjects.Text;
   private killText: Phaser.GameObjects.Text;
   private bountyText: Phaser.GameObjects.Text;
+  private healthBar: Phaser.GameObjects.Image;
+
   hudGroup: Phaser.GameObjects.Group;
   minimap;
   playerDot: Phaser.GameObjects.Arc;
@@ -28,12 +30,19 @@ export class Hud {
     this.killText = this.pin(scene.add.text(850, 45, '', {
       fontSize: '22px', color: '#e00606', ...DARK_PANEL,
     }));
+    this.healthBar = scene.add.image(50, 125, 'health4')
+    .setDisplaySize(80,80)
+    .setScrollFactor(0)
+    .setDepth(100);
+    
+    
     this.hudGroup = scene.add.group([ 
 
     this.cashText,
     this.ammoText,
     this.bountyText,
     this.killText,
+    this.healthBar,
 
     ]);
     const minimapH = 250;
@@ -64,6 +73,10 @@ export class Hud {
     this.playerDot.setDepth(100);
     //so doesnt show on main non minimap screen
     scene.cameras.main.ignore(this.playerDot);
+  }
+
+  setHealth(health: number){
+    this.healthBar.setTexture(`health${health}`)
   }
 
   setCash(amount: number) {

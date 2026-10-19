@@ -23,6 +23,7 @@ const PLAYER_SPAWN = { x: 100, y: 100 };
 export class GameScene extends Phaser.Scene {
   private score = 0;
   private kills = 0;
+  private health = 4;
 
   private level!: Level;
   private projectiles!: Projectiles;
@@ -41,6 +42,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    this.health = 4;
     this.level = new Level(this, 'testlevel');
     this.projectiles = new Projectiles(this, this.level.walls);
 
@@ -128,9 +130,16 @@ export class GameScene extends Phaser.Scene {
     if (this.player.isInvulnerable) {
       return;
     }
+
+    this.health -= 1;
+    this.player.protectAfterHit();
+    this.hud.setHealth(this.health);
+
+    if (this.health <= 0){
     this.score = 0;
     this.kills = 0;
     this.scene.start('GameOver');
+    }
   }
 
   private playMusic() {

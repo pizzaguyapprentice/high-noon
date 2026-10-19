@@ -39,6 +39,9 @@ export class Player extends Phaser.GameObjects.Rectangle {
     return this.scene.time.now < this.lastDodgeAt + BALANCE.player.dodgeDuration;
   }
 
+  protectAfterHit(){
+    this.invulnerableUntil = this.scene.time.now + 500
+  }
 
   update(slowed: boolean) {
     const input = this.readMoveInput();

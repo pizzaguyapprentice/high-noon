@@ -54,6 +54,12 @@ export class Preloader extends Scene{
         this.load.audio('hitmark', 'sounds/sfx/gunshots/death/hitmark.mp3');
         this.load.audio('scream', 'sounds/sfx/gunshots/death/scream.mp3');
         this.load.audio('gameover', 'sounds/sfx/gameover.mp3');
+        
+        this.load.image('health4', 'health/health4.png');
+        this.load.image('health3', 'health/health3.png');
+        this.load.image('health2', 'health/health2.png');
+        this.load.image('health1', 'health/health1.png');
+
     
         //this.load.tilemapTiledJSON('testlevel', 'map/testlevel2.json');
         this.load.once(
