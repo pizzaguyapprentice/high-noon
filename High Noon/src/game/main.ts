@@ -19,7 +19,14 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const StartGame = (parent: string) => {
-  return new Phaser.Game({ ...config, parent });
+  const game = new Phaser.Game({ ...config, parent });
+
+  // Celbridge previews the page in an iframe, so clicking the game must give it keyboard focus
+  const container = document.getElementById(parent)!;
+  container.tabIndex = 0;
+  container.style.outline = 'none';
+  container.addEventListener('pointerdown', () => container.focus({ preventScroll: true }));
+  return game;
 };
 
 export default StartGame;
