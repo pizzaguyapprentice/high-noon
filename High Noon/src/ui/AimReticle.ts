@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { Revolver } from '../systems/Revolver.ts';
+import { Weapon } from '../systems/Weapon.ts';
 
 const SMOOTHING = 0.2;
 
@@ -11,7 +11,7 @@ export class AimReticle {
   constructor(
     private scene: Phaser.Scene,
     private owner: { x: number; y: number },
-    private revolver: Revolver,
+    private weapon: Weapon,
   ) {
     this.circle = scene.add.circle(0, 0, 0, 0xff0000, 0.25)
       .setStrokeStyle(1, 0xff0000, 0.5)
@@ -26,7 +26,7 @@ export class AimReticle {
   update() {
     const pointer = this.scene.input.activePointer;
     const distance = Phaser.Math.Distance.Between(this.owner.x, this.owner.y, pointer.worldX, pointer.worldY);
-    const targetRadius = this.revolver.getSpread(distance);
+    const targetRadius = this.weapon.getSpread(distance);
 
     this.currentRadius = Phaser.Math.Linear(this.currentRadius, targetRadius, SMOOTHING);
     this.circle.setRadius(this.currentRadius);

@@ -9,6 +9,9 @@ const DARK_PANEL = { backgroundColor: '#2a2a2a', padding: { x: 8, y: 4 } };
 export class Hud {
   private cashText: Phaser.GameObjects.Text;
   private ammoText: Phaser.GameObjects.Text;
+  private revolverText: Phaser.GameObjects.Text;
+  private rifleText: Phaser.GameObjects.Text;
+  private shotgunText: Phaser.GameObjects.Text;
   private killText: Phaser.GameObjects.Text;
   private bountyText: Phaser.GameObjects.Text;
   private healthBar: Phaser.GameObjects.Image;
@@ -23,6 +26,15 @@ export class Hud {
     }));
     this.ammoText = this.pin(scene.add.text(16, 52, '', {
       fontSize: '24px', color: '#e00606', ...LIGHT_PANEL,
+    }));
+    this.revolverText = this.pin(scene.add.text(20, 240, '1: revolver', {
+      fontSize: '24px', ...LIGHT_PANEL,
+    }));
+    this.rifleText = this.pin(scene.add.text(20, 280, '2: rifle', {
+      fontSize: '24px', ...LIGHT_PANEL,
+    }));
+    this.shotgunText = this.pin(scene.add.text(20, 320, '3: shotgun', {
+      fontSize: '24px', ...LIGHT_PANEL,
     }));
     this.bountyText = this.pin(scene.add.text(850, 16, '', {
       fontSize: '22px', color: '#e00606', ...DARK_PANEL,
@@ -40,6 +52,9 @@ export class Hud {
 
     this.cashText,
     this.ammoText,
+    this.revolverText,
+    this.rifleText,
+    this.shotgunText,
     this.bountyText,
     this.killText,
     this.healthBar,
@@ -91,8 +106,42 @@ export class Hud {
   }
 
   setKills(kills: number) {
+    if (kills < BALANCE.rifleUnlockKills) {
+    this.rifleText.setText('2̶:̶ ̶r̶i̶f̶l̶e̶ - kills: ' + (BALANCE.rifleUnlockKills - kills));
+    } else {
+    this.rifleText.setText('2: rifle');
+    }
+    if (kills < BALANCE.shotgunUnlockKills) {
+    this.shotgunText.setText('3̶:̶ ̶s̶h̶o̶t̶g̶u̶n̶ - kills: ' + (BALANCE.shotgunUnlockKills - kills));
+    } else {
+    this.shotgunText.setText('3: shotgun');
+    }
     this.killText.setText(`Kills: ${kills}`);
     this.bountyText.setText(`Bounty: $${kills * BALANCE.economy.bountyPerKill}`);
+  }
+
+  setEquipedGun(gun: string, kills: number) {
+    if (gun === 'revolver') {
+    this.revolverText.setColor('#e00606');
+    } else {
+    this.revolverText.setColor('#2a0f0f');
+    }
+
+    if (kills < BALANCE.rifleUnlockKills) {
+    this.rifleText.setColor('#747272');
+    } else if (gun === 'rifle') {
+      this.rifleText.setColor('#e00606');
+    } else {
+    this.rifleText.setColor('#2a0f0f');
+    }
+
+    if (kills < BALANCE.shotgunUnlockKills) {
+    this.shotgunText.setColor('#747272');
+    } else if (gun === 'shotgun') {
+    this.shotgunText.setColor('#e00606');
+    } else {
+    this.shotgunText.setColor('#2a0f0f');
+    }
   }
 
   setAmmo(ammo: number, maxAmmo: number, reloading: boolean) {

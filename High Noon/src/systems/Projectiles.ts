@@ -23,8 +23,7 @@ export class Projectiles {
   }
 
 
-  firePlayerBullet(fromX: number, fromY: number, targetX: number, targetY: number) {
-    const speed = BALANCE.revolver.bulletSpeed;
+  firePlayerBullet(fromX: number, fromY: number, targetX: number, targetY: number, speed: number) {
     const bullet = this.scene.add.rectangle(fromX, fromY, 7, 7, 0x0);
 
     this.playerBullets.add(bullet);

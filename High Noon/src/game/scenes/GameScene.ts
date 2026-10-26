@@ -1,8 +1,9 @@
 import * as Phaser from 'phaser';
+import { BALANCE } from '../../config/balance.ts';
 import { Level } from '../../world/Level.ts';
 import { Player } from '../../entities/Player.ts';
 import { Projectiles } from '../../systems/Projectiles.ts';
-import { Revolver } from '../../systems/Revolver.ts';
+import { Weapon } from '../../systems/Weapon.ts';
 import { EnemyManager, SpawnPoint } from '../../systems/EnemyManager.ts';
 import { Pickups } from '../../systems/Pickups.ts';
 import { Hud } from '../../ui/Hud.ts';
@@ -28,7 +29,7 @@ export class GameScene extends Phaser.Scene {
   private level!: Level;
   private projectiles!: Projectiles;
   private player!: Player;
-  private revolver!: Revolver;
+  private weapon!: Weapon;
   private reticle!: AimReticle;
   private enemies!: EnemyManager;
   private pickups!: Pickups;
@@ -50,10 +51,10 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, playerSpawn.x, playerSpawn.y, this.level.walls);
 
     this.hud = new Hud(this, this.player, this.level);
-    this.revolver = new Revolver(this, this.player, this.projectiles, ({ ammo, maxAmmo, reloading }) => {
+    this.weapon = new Weapon(this, this.player, this.projectiles, ({ ammo, maxAmmo, reloading }) => {
       this.hud.setAmmo(ammo, maxAmmo, reloading);
     });
-    this.reticle = new AimReticle(this, this.player, this.revolver);
+    this.reticle = new AimReticle(this, this.player, this.weapon);
     this.hud.minimap.ignore(this.reticle.circle);
 
     this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles);    
@@ -79,14 +80,15 @@ export class GameScene extends Phaser.Scene {
       this.fireAtPointer();
     }
     if (Phaser.Input.Keyboard.JustDown(this.reloadKey)) {
-      this.revolver.startReload();
+      this.weapon.startReload();
     }
 
-    this.player.update(this.revolver.isReloading);
+    this.player.update(this.weapon.isReloading);
     this.enemies.update(this.kills);
     this.reticle.update();
-    this.revolver.update();
+    this.weapon.update();
     this.hud.playerDot.setPosition(this.player.x, this.player.y);
+    this.hud.setEquipedGun(this.weapon.equipedGun, this.kills);
   }
 
   private setupCamera() {
@@ -96,6 +98,19 @@ export class GameScene extends Phaser.Scene {
 
   private setupInput() {
     const keyboard = this.input.keyboard!;
+    keyboard.on('keydown-ONE', () =>{
+      this.weapon.equipedGun = 'revolver';
+    });
+    keyboard.on('keydown-TWO', () =>{
+      if (this.kills >= BALANCE.rifleUnlockKills) {
+      this.weapon.equipedGun = 'rifle';
+      }
+     });
+    keyboard.on('keydown-THREE', () =>{
+      if (this.kills >= BALANCE.shotgunUnlockKills) {
+      this.weapon.equipedGun = 'shotgun';
+      }
+    });
     this.fireKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.reloadKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.input.on('pointerdown', () => this.fireAtPointer());
@@ -103,8 +118,8 @@ export class GameScene extends Phaser.Scene {
 
   private setupRules() {
     this.player.on(Player.Events.Dodge, () => {
-      this.revolver.cancelReload();
-      this.revolver.addRound();
+      this.weapon.cancelReload();
+      this.weapon.addRound();
     });
 
     this.enemies.on(EnemyManager.Events.Killed, () => {
@@ -123,7 +138,7 @@ export class GameScene extends Phaser.Scene {
 
   private fireAtPointer() {
     const pointer = this.input.activePointer;
-    this.revolver.fire(pointer.worldX, pointer.worldY, this.reticle.radius);
+    this.weapon.fire(pointer.worldX, pointer.worldY, this.reticle.radius);
   }
 
   private onPlayerHit() {

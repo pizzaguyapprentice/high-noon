@@ -9,14 +9,17 @@ export interface AmmoState {
   reloading: boolean;
 }
 
-export class Revolver {
+export class Weapon {
   private ammo: number = BALANCE.revolver.maxAmmo;
+  private savedAmmo: { [gun: string]: number } = {};
   private reloading = false;
   private reloadTimer?: Phaser.Time.TimerEvent;
   private reloadStartedAt = 0;
   private reloadEndsAt = 0;
   private shotTimes: number[] = [];
   private reloadBar: ReloadBar;
+  private gun = 'revolver';
+  private shotDelay = 0; 
 
   constructor(
     private scene: Phaser.Scene,
@@ -28,12 +31,44 @@ export class Revolver {
     this.notify();
   }
 
+  get equipedGun(): string {
+    return this.gun;
+  }
+
+  set equipedGun(name: string) {
+    if (this.gun === name) {
+      return;
+    }
+    this.cancelReload();
+    this.savedAmmo[this.gun] = this.ammo;
+    this.gun = name;
+    if (this.savedAmmo[name] === undefined) {
+      this.ammo = this.maxAmmo;
+    } else {
+      this.ammo = this.savedAmmo[name];
+    }
+    this.notify();
+  }
+
+  private get maxAmmo(): number {
+    if (this.equipedGun === 'shotgun') {
+      return 2;
+    }
+    if (this.equipedGun === 'rifle') {
+      return 8;
+    }
+    return BALANCE.revolver.maxAmmo;
+  }
+
   get isReloading(): boolean {
     return this.reloading;
   }
 
 
   fire(targetX: number, targetY: number, spreadRadius: number): boolean {
+  if(this.scene.time.now < this.shotDelay){
+    return false;
+  }
     if (this.reloading) {
       if (this.ammo <= 0) {
         return false;
@@ -44,6 +79,13 @@ export class Revolver {
       return false;
     }
 
+    let speed: number = BALANCE.revolver.bulletSpeed;
+
+    if(this.equipedGun === 'rifle'){
+      speed = 2000;
+      this.shotDelay = this.scene.time.now + 500;
+    }
+
     this.ammo -= 1;
     this.notify();
 
@@ -51,13 +93,20 @@ export class Revolver {
     this.shotTimes = this.shotTimes.filter(t => now - t < BALANCE.revolver.cursorCooldown);
     this.shotTimes.push(now);
 
-    const angle = Phaser.Math.FloatBetween(0, 2 * Math.PI);
-    const radius = spreadRadius * Math.sqrt(Math.random());
-    const hitX = targetX + Math.cos(angle) * radius;
-    const hitY = targetY + Math.sin(angle) * radius;
+    
 
-    this.scene.sound.play('sixshootershot', { volume: 0.2, detune: Phaser.Math.Between(-100, 100) });
-    this.projectiles.firePlayerBullet(this.owner.x, this.owner.y, hitX, hitY);
+    if (this.equipedGun === 'shotgun') {
+      this.shotDelay = this.scene.time.now + 1000;
+    }
+    let pelletCount = 5;
+    for (let i = 0; i < pelletCount; i++) {
+    const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
+    const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
+
+    this.projectiles.firePlayerBullet(this.owner.x, this.owner.y, x, y, speed);
+    }
+
+    this.scene.sound.play('sixshootershot', { volume: 0.2 });
     return true;
   }
 
@@ -73,17 +122,23 @@ export class Revolver {
       BALANCE.revolver.minCircleScale,
       BALANCE.revolver.maxCircleScale,
     );
+    if (this.equipedGun === 'rifle') {
+      return baseSpread * distanceScale / 3;
+    }
+    if (this.equipedGun === 'shotgun') {
+      return baseSpread * distanceScale * 2;
+    }
     return baseSpread * distanceScale;
   }
 
   startReload() {
-    if (this.reloading || this.ammo >= BALANCE.revolver.maxAmmo) {
+    if (this.reloading || this.ammo >= this.maxAmmo) {
       return;
     }
     this.reloading = true;
     this.reloadStartedAt = this.scene.time.now;
     this.reloadEndsAt = this.reloadStartedAt
-      + (BALANCE.revolver.maxAmmo - this.ammo) * BALANCE.revolver.reloadPerBullet;
+      + (this.maxAmmo - this.ammo) * BALANCE.revolver.reloadPerBullet;
     this.notify();
 
     this.reloadTimer = this.scene.time.addEvent({
@@ -92,7 +147,7 @@ export class Revolver {
       callback: () => {
         this.ammo += 1;
         this.scene.sound.play('sixshooterinsert', { volume: 0.2, detune: Phaser.Math.Between(-100, 100) });
-        if (this.ammo >= BALANCE.revolver.maxAmmo) {
+        if (this.ammo >= this.maxAmmo) {
           this.endReload();
         } else {
           this.notify();
@@ -108,7 +163,7 @@ export class Revolver {
   }
 
   addRound() {
-    this.ammo = Math.min(this.ammo + 1, BALANCE.revolver.maxAmmo);
+    this.ammo = Math.min(this.ammo + 1, this.maxAmmo);
     this.notify();
   }
 
@@ -133,7 +188,7 @@ export class Revolver {
   private notify() {
     this.onAmmoChanged({
       ammo: this.ammo,
-      maxAmmo: BALANCE.revolver.maxAmmo,
+      maxAmmo: this.maxAmmo,
       reloading: this.reloading,
     });
   }
