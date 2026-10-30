@@ -66,9 +66,11 @@ export class Weapon {
 
 
   fire(targetX: number, targetY: number, spreadRadius: number): boolean {
-  if(this.scene.time.now < this.shotDelay){
-    return false;
-  }
+  
+    if(this.scene.time.now < this.shotDelay){
+      return false;
+    }
+
     if (this.reloading) {
       if (this.ammo <= 0) {
         return false;
@@ -92,18 +94,18 @@ export class Weapon {
     const now = this.scene.time.now;
     this.shotTimes = this.shotTimes.filter(t => now - t < BALANCE.revolver.cursorCooldown);
     this.shotTimes.push(now);
-
-    
-
+    let pelletCount = 1;
     if (this.equipedGun === 'shotgun') {
       this.shotDelay = this.scene.time.now + 1000;
+      pelletCount = 5;
     }
-    let pelletCount = 5;
+    
+    
     for (let i = 0; i < pelletCount; i++) {
-    const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
-    const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
+      const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
+      const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
 
-    this.projectiles.firePlayerBullet(this.owner.x, this.owner.y, x, y, speed);
+      this.projectiles.firePlayerBullet(this.owner.x, this.owner.y, x, y, speed);
     }
 
     this.scene.sound.play('sixshootershot', { volume: 0.2 });
