@@ -3,11 +3,11 @@
 High Noon is a top down run and gun game. Once a Lutheran, Lars crossed the Rubicon and never looked back. Now, he’s on a warpath entirely he calls his own. Your goal is to rack up the highest possible bounty and find out more about Lars and the man he became.
 
 ### Controls
-WASD - Movement
-Left Mouse Button/Space - Shoot
-R - Reload
-Shift - Roll and reload (gives invincibility frames and 1 free reload)
-M - Toggle the mini map
+- WASD - Movement
+- LMB/Space - Shoot
+- R - Reload
+- Shift - Roll+Reload (invincibility frames + 1 free reload)
+- M - Toggle the mini map
 
 ### HUD
 Currently the HUD shows:
