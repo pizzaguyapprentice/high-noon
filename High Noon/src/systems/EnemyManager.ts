@@ -3,7 +3,7 @@ import { BALANCE } from '../config/balance.ts';
 import { Enemy } from '../entities/Enemy.ts';
 import { Level } from '../world/Level.ts';
 import { Projectiles } from './Projectiles.ts';
-
+import { Pathfinder } from './Pathfinder.ts';
 export interface SpawnPoint {
   x: number;
   y: number;
@@ -25,6 +25,7 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
     private level: Level,
     private target: Target,
     private projectiles: Projectiles,
+    private pathfinder: Pathfinder,
   ){
     super();
 
@@ -41,7 +42,7 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
 
   spawnWave(points: SpawnPoint[]) {
     for (const { x, y, size } of points) {
-      this.group.add(new Enemy(this.scene, x, y, size));
+      this.group.add(new Enemy(this.scene, x, y, this.pathfinder, size));
     }
   }
 

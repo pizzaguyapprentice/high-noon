@@ -1,0 +1,52 @@
+{
+    "name": "easystarjs",
+    "version": "0.4.4",
+    "main": "./src/easystar.js",
+    "typings": "./index.d.ts",
+    "description": "Asynchronous A* Pathfinding API",
+    "scripts": {
+        "build:production": "webpack --production && webpack --production --minify",
+        "test:production": "karma start ./karma.conf.js",
+        "benchmark": "karma start ./karma.benchmark.conf.js",
+        "dev": "webpack --development && karma start ./karma.conf.js --development"
+    },
+    "keywords": [
+        "A*",
+        "pathfinding",
+        "grid",
+        "easystar"
+    ],
+    "homepage": "http://www.easystarjs.com",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/prettymuchbryce/easystarjs.git"
+    },
+    "license": "MIT",
+    "author": {
+        "name": "Bryce Neal",
+        "email": "brycedneal@gmail.com",
+        "url": "http://bryce.is"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.11.6",
+        "@babel/preset-env": "^7.11.5",
+        "@jsdevtools/coverage-istanbul-loader": "^3.0.5",
+        "babel-loader": "^8.1.0",
+        "jasmine-core": "^3.6.0",
+        "karma": "^5.2.3",
+        "karma-benchmark": "^1.0.4",
+        "karma-benchmarkjs-reporter": "^1.0.0",
+        "karma-chrome-launcher": "^3.1.0",
+        "karma-coverage-istanbul-reporter": "^3.0.3",
+        "karma-jasmine": "^4.0.1",
+        "karma-verbose-reporter": "0.0.6",
+        "karma-webpack": "^4.0.2",
+        "terser-webpack-plugin": "^4.2.3",
+        "uglify-js": "^3.11.1",
+        "webpack": "^4.44.2",
+        "webpack-cli": "^3.3.12"
+    },
+    "dependencies": {
+        "heap": "0.2.6"
+    }
+}

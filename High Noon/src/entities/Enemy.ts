@@ -3,7 +3,9 @@ import { BALANCE } from '../config/balance.ts';
 import { ReloadBar } from '../ui/ReloadBar.ts';
 import {ENEMY_STATES,type EnemyPerception, type EnemyStateKey} from '../ai/EnemyStates.ts';
 import { StateMachine } from '../ai/StateMachine.ts';
+import type {Pathfinder} from '../systems/Pathfinder.ts';
 const ARRIVE_DISTANCE = 6;
+const REPATH_INTERVAL = 400;
 
 export class Enemy extends Phaser.GameObjects.Rectangle {
   
@@ -19,8 +21,10 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
   private reloadUntil = 0;
   private reloadBar: ReloadBar;
   enemyDot;
+  private path: Phaser.Math.Vector2[] = [];
+  private nextRepathAt = 0;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, size = 16) {
+  constructor(scene: Phaser.Scene, x: number, y: number,private pathfinder: Pathfinder, size = 16) {
     super(scene, x, y, size, size, 0xff2020);
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -45,7 +49,8 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
 
   chase(target: { x: number; y: number }, kills: number) {
     const bonus = Math.min(kills, BALANCE.enemy.killScalingCap) * BALANCE.enemy.speedPerKill;
-    this.scene.physics.moveTo(this, target.x, target.y, BALANCE.enemy.speed + bonus);
+    this.navigateTo(target, BALANCE.enemy.speed + bonus);
+    //this.scene.physics.moveTo(this, target.x, target.y, BALANCE.enemy.speed + bonus);
   }
 
   moveToward(point:{x:number,y:number}, speed:number):boolean{
@@ -53,13 +58,43 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
         this.stop();
         return true;
       }
-      this.scene.physics.moveTo(this, point.x,point.y,speed);
+      this.navigateTo(point,speed);
+      //this.scene.physics.moveTo(this, point.x,point.y,speed);
       return false;
   }
 
   stop(){
     this.body.setVelocity(0,0);
+    this.clearPath();
   }
+  clearPath() {
+    this.path = [];
+    this.nextRepathAt = 0;
+  }
+
+  private navigateTo(goal:{x:number;y:number},speed:number){
+    const now = this.scene.time.now;
+
+    if(now >= this.nextRepathAt){
+      this.nextRepathAt = now + REPATH_INTERVAL+Phaser.Math.Between(0,200);
+      this.pathfinder.findPath(this.x, this.y, goal.x, goal.y, (path) => {
+        // the path arrives a few frames later; the enemy may be dead by then
+        if (this.active && path) {
+          this.path = path.slice(1); // first point is the tile we're already on
+        }
+      });
+    }
+
+    const next = this.path[0];
+    if (next && Phaser.Math.Distance.Between(this.x, this.y, next.x, next.y) <= ARRIVE_DISTANCE) {
+      this.path.shift();
+    }
+
+    const waypoint = this.path[0] ?? goal;
+    this.scene.physics.moveTo(this, waypoint.x, waypoint.y, speed);
+  }
+
+  
 
   isReadyToFire(now: number): boolean {
     return this.active && now >= this.nextShotAt;

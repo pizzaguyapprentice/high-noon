@@ -8,6 +8,7 @@ import { EnemyManager, SpawnPoint } from '../../systems/EnemyManager.ts';
 import { Pickups } from '../../systems/Pickups.ts';
 import { Hud } from '../../ui/Hud.ts';
 import { AimReticle } from '../../ui/AimReticle.ts';
+import { Pathfinder } from '../../systems/Pathfinder.ts';
 
 const PLAYER_SPAWN = { x: 100, y: 100 };
 
@@ -34,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   private enemies!: EnemyManager;
   private pickups!: Pickups;
   private hud!: Hud;
+  private pathfinder!: Pathfinder;
 
   private fireKey!: Phaser.Input.Keyboard.Key;
   private reloadKey!: Phaser.Input.Keyboard.Key;
@@ -45,6 +47,7 @@ export class GameScene extends Phaser.Scene {
   create() {
     this.health = 4;
     this.level = new Level(this, 'testlevel');
+    this.pathfinder = new Pathfinder(this.level.walls);
     this.projectiles = new Projectiles(this, this.level.walls);
 
     const playerSpawn = this.level.getSpawns('player')[0] ?? PLAYER_SPAWN;
@@ -57,7 +60,7 @@ export class GameScene extends Phaser.Scene {
     this.reticle = new AimReticle(this, this.player, this.weapon);
     this.hud.minimap.ignore(this.reticle.circle);
 
-    this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles);    
+    this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles, this.pathfinder);    
     this.enemies.spawnWave(this.level.getSpawns("enemy"));
     
     this.pickups = new Pickups(this, this.level, this.player, (value) => {
@@ -68,7 +71,7 @@ export class GameScene extends Phaser.Scene {
 
     this.hud.setCash(this.score);
     this.hud.setKills(this.kills);
-
+   
     this.setupCamera();
     this.setupInput();
     this.setupRules();
@@ -87,6 +90,7 @@ export class GameScene extends Phaser.Scene {
     this.enemies.update(this.kills);
     this.reticle.update();
     this.weapon.update();
+    this.pathfinder.update();
     this.hud.playerDot.setPosition(this.player.x, this.player.y);
     this.hud.setEquipedGun(this.weapon.equipedGun, this.kills);
   }
