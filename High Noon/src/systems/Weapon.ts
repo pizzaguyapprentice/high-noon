@@ -7,33 +7,18 @@ export interface AmmoState {
   ammo: number;
   maxAmmo: number;
   reloading: boolean;
-  selectedSlot: number;
-  slots: HotbarSlot[];
-}
-
-export interface HotbarSlot {
-  item: 'revolver' | 'dynamite';
-  label: string;
-  ammo: number;
-  maxAmmo: number;
 }
 
 export class Weapon {
-  readonly slots: HotbarSlot[] = [
-    { item: 'revolver', label: 'revolver', ammo: BALANCE.revolver.maxAmmo, maxAmmo: BALANCE.revolver.maxAmmo },
-    { item: 'revolver', label: 'revolver', ammo: BALANCE.revolver.maxAmmo, maxAmmo: BALANCE.revolver.maxAmmo },
-    { item: 'revolver', label: 'revolver', ammo: BALANCE.revolver.maxAmmo, maxAmmo: BALANCE.revolver.maxAmmo },
-    { item: 'revolver', label: 'revolver', ammo: BALANCE.revolver.maxAmmo, maxAmmo: BALANCE.revolver.maxAmmo },
-    { item: 'dynamite', label: 'dynamite', ammo: 3, maxAmmo: 3 },
-  ];
-
-  private selectedSlot = 0;
+  private ammo: number = BALANCE.revolver.maxAmmo;
+  private savedAmmo: { [gun: string]: number } = {};
   private reloading = false;
   private reloadTimer?: Phaser.Time.TimerEvent;
   private reloadStartedAt = 0;
   private reloadEndsAt = 0;
   private shotTimes: number[] = [];
   private reloadBar: ReloadBar;
+  private gun = 'revolver';
   private shotDelay = 0; 
 
   constructor(
@@ -47,46 +32,53 @@ export class Weapon {
   }
 
   get equipedGun(): string {
-    return this.currentSlot.item;
+    return this.gun;
   }
 
-  get currentSlot(): HotbarSlot {
-    return this.slots[this.selectedSlot];
-  }
-
-  get currentSlotIndex(): number {
-    return this.selectedSlot;
-  }
-
-  selectSlot(index: number) {
-    if (index < 0 || index >= this.slots.length || index === this.selectedSlot) {
+  set equipedGun(name: string) {
+    if (this.gun === name) {
       return;
     }
     this.cancelReload();
-    this.selectedSlot = index;
+    this.savedAmmo[this.gun] = this.ammo;
+    this.gun = name;
+    if (this.savedAmmo[name] === undefined) {
+      this.ammo = this.maxAmmo;
+    } else {
+      this.ammo = this.savedAmmo[name];
+    }
     this.notify();
   }
 
-  cycleSlot(direction: 1 | -1) {
-    const nextSlot = (this.selectedSlot + direction + this.slots.length) % this.slots.length;
-    this.selectSlot(nextSlot);
+  private get maxAmmo(): number {
+    if (this.equipedGun === 'dynamite') {
+      return 3;
+    }
+    if (this.equipedGun === 'shotgun') {
+      return 2;
+    }
+    if (this.equipedGun === 'rifle') {
+      return 8;
+    }
+    return BALANCE.revolver.maxAmmo;
   }
 
   get isReloading(): boolean {
     return this.reloading;
   }
 
+
   consumeDynamite(): boolean {
-    if (this.currentSlot.item !== 'dynamite' || this.currentSlot.ammo <= 0) {
+    if (this.equipedGun !== 'dynamite' || this.ammo <= 0) {
       return false;
     }
-    this.currentSlot.ammo -= 1;
+    this.ammo -= 1;
     this.notify();
     return true;
   }
 
   fire(targetX: number, targetY: number, spreadRadius: number): boolean {
-    if (this.currentSlot.item !== 'revolver') {
+    if (this.equipedGun === 'dynamite') {
       return false;
     }
 
@@ -95,24 +87,36 @@ export class Weapon {
     }
 
     if (this.reloading) {
-      if (this.currentSlot.ammo <= 0) {
+      if (this.ammo <= 0) {
         return false;
       }
       this.cancelReload();
     }
-    if (this.currentSlot.ammo <= 0) {
+    if (this.ammo <= 0) {
       return false;
     }
 
-    const speed: number = BALANCE.revolver.bulletSpeed;
+    let speed: number = BALANCE.revolver.bulletSpeed;
 
-    this.currentSlot.ammo -= 1;
+    if(this.equipedGun === 'rifle'){
+      speed = 2000;
+      this.shotDelay = this.scene.time.now + 500;
+    }
+
+    this.ammo -= 1;
     this.notify();
 
     const now = this.scene.time.now;
     this.shotTimes = this.shotTimes.filter(t => now - t < BALANCE.revolver.cursorCooldown);
     this.shotTimes.push(now);
-    for (let i = 0; i < 1; i++) {
+    let pelletCount = 1;
+    if (this.equipedGun === 'shotgun') {
+      this.shotDelay = this.scene.time.now + 1000;
+      pelletCount = 5;
+    }
+
+    
+    for (let i = 0; i < pelletCount; i++) {
       const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
       const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
 
@@ -135,26 +139,32 @@ export class Weapon {
       BALANCE.revolver.minCircleScale,
       BALANCE.revolver.maxCircleScale,
     );
+    if (this.equipedGun === 'rifle') {
+      return baseSpread * distanceScale / 3;
+    }
+    if (this.equipedGun === 'shotgun') {
+      return baseSpread * distanceScale * 2;
+    }
     return baseSpread * distanceScale;
   }
 
   startReload() {
-    if (this.currentSlot.item !== 'revolver' || this.reloading || this.currentSlot.ammo >= this.currentSlot.maxAmmo) {
+    if (this.equipedGun === 'dynamite' || this.reloading || this.ammo >= this.maxAmmo) {
       return;
     }
     this.reloading = true;
     this.reloadStartedAt = this.scene.time.now;
     this.reloadEndsAt = this.reloadStartedAt
-      + (this.currentSlot.maxAmmo - this.currentSlot.ammo) * BALANCE.revolver.reloadPerBullet;
+      + (this.maxAmmo - this.ammo) * BALANCE.revolver.reloadPerBullet;
     this.notify();
 
     this.reloadTimer = this.scene.time.addEvent({
       delay: BALANCE.revolver.reloadPerBullet,
       loop: true,
       callback: () => {
-        this.currentSlot.ammo += 1;
+        this.ammo += 1;
         this.scene.sound.play('sixshooterinsert', { volume: 0.2, detune: Phaser.Math.Between(-100, 100) });
-        if (this.currentSlot.ammo >= this.currentSlot.maxAmmo) {
+        if (this.ammo >= this.maxAmmo) {
           this.endReload();
         } else {
           this.notify();
@@ -170,9 +180,10 @@ export class Weapon {
   }
 
   addRound() {
-    if (this.currentSlot.item === 'revolver') {
-      this.currentSlot.ammo = Math.min(this.currentSlot.ammo + 1, this.currentSlot.maxAmmo);
+    if (this.equipedGun === 'dynamite') {
+      return;
     }
+    this.ammo = Math.min(this.ammo + 1, this.maxAmmo);
     this.notify();
   }
 
@@ -196,11 +207,9 @@ export class Weapon {
 
   private notify() {
     this.onAmmoChanged({
-      ammo: this.currentSlot.ammo,
-      maxAmmo: this.currentSlot.maxAmmo,
+      ammo: this.ammo,
+      maxAmmo: this.maxAmmo,
       reloading: this.reloading,
-      selectedSlot: this.selectedSlot,
-      slots: this.slots,
     });
   }
 }

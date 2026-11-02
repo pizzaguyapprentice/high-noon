@@ -1,6 +1,7 @@
 export const BALANCE = {
   rifleUnlockKills: 2,
   shotgunUnlockKills: 3,
+  dynamiteUnlockKills: 4,
   player: {
     speed: 100,
     reloadSpeed: 80,

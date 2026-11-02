@@ -1,5 +1,5 @@
 {
-  "nodeModulesDir": "auto",
+  "nodeModulesDir": "none",
   "tasks": {
     "dev": "deno run --watch=src/,public/,tests/ --allow-read --allow-write --allow-run --allow-env build.ts --watching",
     "build": "deno run --allow-read=. --allow-write=. --allow-run=deno --allow-env build.ts",

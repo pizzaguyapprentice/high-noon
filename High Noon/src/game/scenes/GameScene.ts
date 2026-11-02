@@ -55,8 +55,8 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, playerSpawn.x, playerSpawn.y, this.level.walls);
 
     this.hud = new Hud(this, this.player, this.level);
-    this.weapon = new Weapon(this, this.player, this.projectiles, (state) => {
-      this.hud.setAmmo(state);
+    this.weapon = new Weapon(this, this.player, this.projectiles, ({ ammo, maxAmmo, reloading }) => {
+      this.hud.setAmmo(ammo, maxAmmo, reloading);
     });
     this.reticle = new AimReticle(this, this.player, this.weapon);
     this.hud.minimap.ignore(this.reticle.circle);
@@ -94,6 +94,7 @@ export class GameScene extends Phaser.Scene {
     this.weapon.update();
     this.pathfinder.update();
     this.hud.playerDot.setPosition(this.player.x, this.player.y);
+    this.hud.setEquipedGun(this.weapon.equipedGun, this.kills);
   }
 
   private setupCamera() {
@@ -103,17 +104,22 @@ export class GameScene extends Phaser.Scene {
 
   private setupInput() {
     const keyboard = this.input.keyboard!;
-    ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'].forEach((key, index) => {
-      keyboard.on(`keydown-${key}`, () => this.weapon.selectSlot(index));
+    keyboard.on('keydown-ONE', () =>{
+      this.weapon.equipedGun = 'revolver';
     });
-    this.input.on('wheel', (
-      _pointer: Phaser.Input.Pointer,
-      _currentlyOver: Phaser.GameObjects.GameObject[],
-      _deltaX: number,
-      deltaY: number,
-    ) => {
-      if (deltaY !== 0) {
-        this.weapon.cycleSlot(deltaY > 0 ? 1 : -1);
+    keyboard.on('keydown-TWO', () =>{
+      if (this.kills >= BALANCE.rifleUnlockKills) {
+      this.weapon.equipedGun = 'rifle';
+      }
+     });
+    keyboard.on('keydown-THREE', () =>{
+      if (this.kills >= BALANCE.shotgunUnlockKills) {
+      this.weapon.equipedGun = 'shotgun';
+      }
+    });
+    keyboard.on('keydown-FOUR', () =>{
+      if (this.kills >= BALANCE.dynamiteUnlockKills) {
+      this.weapon.equipedGun = 'dynamite';
       }
     });
     this.fireKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -154,7 +160,7 @@ export class GameScene extends Phaser.Scene {
 
   private fireAtPointer() {
     const pointer = this.input.activePointer;
-    if (this.weapon.currentSlot.item === 'dynamite') {
+    if (this.weapon.equipedGun === 'dynamite') {
       this.placeDynamite();
       return;
     }

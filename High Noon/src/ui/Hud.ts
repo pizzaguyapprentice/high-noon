@@ -2,18 +2,17 @@ import * as Phaser from 'phaser';
 import { BALANCE } from '../config/balance.ts';
 import type { Player } from '../entities/Player.ts';
 import type { Level } from '../world/Level.ts';
-import type { AmmoState } from '../systems/Weapon.ts';
 
 const LIGHT_PANEL = { backgroundColor: '#cdc3a5', padding: { x: 8, y: 4 } };
 const DARK_PANEL = { backgroundColor: '#2a2a2a', padding: { x: 8, y: 4 } };
 
 export class Hud {
-  private scene: Phaser.Scene;
   private cashText: Phaser.GameObjects.Text;
   private ammoText: Phaser.GameObjects.Text;
-  private hotbarTexts: Phaser.GameObjects.Text[] = [];
-  private lastSelectedSlot = -1;
-  private hotbarHideTimer?: Phaser.Time.TimerEvent;
+  private revolverText: Phaser.GameObjects.Text;
+  private rifleText: Phaser.GameObjects.Text;
+  private shotgunText: Phaser.GameObjects.Text;
+  private dynamiteText: Phaser.GameObjects.Text;
   private killText: Phaser.GameObjects.Text;
   private bountyText: Phaser.GameObjects.Text;
   private healthBar: Phaser.GameObjects.Image;
@@ -23,18 +22,24 @@ export class Hud {
   playerDot: Phaser.GameObjects.Arc;
 
   constructor(scene: Phaser.Scene, player: Player, level: Level) {
-    this.scene = scene;
     this.cashText = this.pin(scene.add.text(16, 16, '', {
       fontSize: '32px', color: 'green', ...LIGHT_PANEL,
     }));
     this.ammoText = this.pin(scene.add.text(16, 52, '', {
       fontSize: '24px', color: '#e00606', ...LIGHT_PANEL,
     }));
-    for (let i = 0; i < 5; i += 1) {
-      this.hotbarTexts.push(this.pin(scene.add.text(20, 240 + i * 40, '', {
-        fontSize: '24px', ...LIGHT_PANEL,
-      })));
-    }
+    this.revolverText = this.pin(scene.add.text(20, 240, '1: revolver', {
+      fontSize: '24px', ...LIGHT_PANEL,
+    }));
+    this.rifleText = this.pin(scene.add.text(20, 280, '2: rifle', {
+      fontSize: '24px', ...LIGHT_PANEL,
+    }));
+    this.shotgunText = this.pin(scene.add.text(20, 320, '3: shotgun', {
+      fontSize: '24px', ...LIGHT_PANEL,
+    }));
+    this.dynamiteText = this.pin(scene.add.text(20, 360, '4: dynamite', {
+      fontSize: '24px', ...LIGHT_PANEL,
+    }));
     this.bountyText = this.pin(scene.add.text(850, 16, '', {
       fontSize: '22px', color: '#e00606', ...DARK_PANEL,
     }));
@@ -51,7 +56,10 @@ export class Hud {
 
     this.cashText,
     this.ammoText,
-    ...this.hotbarTexts,
+    this.revolverText,
+    this.rifleText,
+    this.shotgunText,
+    this.dynamiteText,
     this.bountyText,
     this.killText,
     this.healthBar,
@@ -103,29 +111,60 @@ export class Hud {
   }
 
   setKills(kills: number) {
+    if (kills < BALANCE.rifleUnlockKills) {
+    this.rifleText.setText('2̶:̶ ̶r̶i̶f̶l̶e̶ - kills: ' + (BALANCE.rifleUnlockKills - kills));
+    } else {
+    this.rifleText.setText('2: rifle');
+    }
+    if (kills < BALANCE.shotgunUnlockKills) {
+    this.shotgunText.setText('3̶:̶ ̶s̶h̶o̶t̶g̶u̶n̶ - kills: ' + (BALANCE.shotgunUnlockKills - kills));
+    } else {
+    this.shotgunText.setText('3: shotgun');
+    }
+    if (kills < BALANCE.dynamiteUnlockKills) {
+    this.dynamiteText.setText('4̶:̶ ̶d̶y̶n̶a̶m̶i̶t̶e̶ - kills: ' + (BALANCE.dynamiteUnlockKills - kills));
+    } else {
+    this.dynamiteText.setText('4: dynamite');
+    }
     this.killText.setText(`Kills: ${kills}`);
     this.bountyText.setText(`Bounty: $${kills * BALANCE.economy.bountyPerKill}`);
   }
 
-  setAmmo(state: AmmoState) {
-    if (state.selectedSlot !== this.lastSelectedSlot) {
-      this.lastSelectedSlot = state.selectedSlot;
-      this.hotbarHideTimer?.remove();
-      this.hotbarTexts.forEach((text) => text.setVisible(true));
-      this.hotbarHideTimer = this.scene.time.delayedCall(1500, () => this.hideInactiveHotbarSlots());
+  setEquipedGun(gun: string, kills: number) {
+    if (gun === 'revolver') {
+    this.revolverText.setColor('#e00606');
+    } else {
+    this.revolverText.setColor('#2a0f0f');
     }
 
-    const prefix = state.reloading ? 'Reloading : ' : 'Ammo: ';
-    this.ammoText.setText(`${prefix}${state.ammo}/${state.maxAmmo}`);
-    state.slots.forEach((slot, index) => {
-      this.hotbarTexts[index].setText(`${index + 1}: ${slot.label} ${slot.ammo}/${slot.maxAmmo}`);
-      this.hotbarTexts[index].setColor(index === state.selectedSlot ? '#e00606' : '#2a0f0f');
-    });
+    if (kills < BALANCE.rifleUnlockKills) {
+    this.rifleText.setColor('#747272');
+    } else if (gun === 'rifle') {
+      this.rifleText.setColor('#e00606');
+    } else {
+    this.rifleText.setColor('#2a0f0f');
+    }
+
+    if (kills < BALANCE.shotgunUnlockKills) {
+    this.shotgunText.setColor('#747272');
+    } else if (gun === 'shotgun') {
+    this.shotgunText.setColor('#e00606');
+    } else {
+    this.shotgunText.setColor('#2a0f0f');
+    }
+
+    if (kills < BALANCE.dynamiteUnlockKills) {
+    this.dynamiteText.setColor('#747272');
+    } else if (gun === 'dynamite') {
+    this.dynamiteText.setColor('#e00606');
+    } else {
+    this.dynamiteText.setColor('#2a0f0f');
+    }
   }
 
-  private hideInactiveHotbarSlots() {
-    this.hotbarTexts.forEach((text, index) => text.setVisible(index === this.lastSelectedSlot));
-    this.hotbarHideTimer = undefined;
+  setAmmo(ammo: number, maxAmmo: number, reloading: boolean) {
+    const prefix = reloading ? 'Reloading : ' : 'Ammo: ';
+    this.ammoText.setText(`${prefix}${ammo}/${maxAmmo}`);
   }
 
   private pin(text: Phaser.GameObjects.Text) {
