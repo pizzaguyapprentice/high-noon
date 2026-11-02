@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "easystarjs": "^0.4.4"
+    "easystarjs": "^0.4.4",
+    "phaser": "4.0.0"
   }
 }

@@ -20,6 +20,10 @@ export const BALANCE = {
     minCircleScale: 0.5,
     maxCircleScale: 2.5,
   },
+  dynamite: {
+    activationRadius: 120,
+    blastRadius: 160,
+  },
   enemy: {
     speed: 60,
     speedPerKill: 3,

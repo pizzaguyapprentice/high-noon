@@ -1,14 +1,14 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../../config/balance.ts';
 import { Level } from '../../world/Level.ts';
 import { Player } from '../../entities/Player.ts';
 import { Projectiles } from '../../systems/Projectiles.ts';
 import { Weapon } from '../../systems/Weapon.ts';
-import { EnemyManager, SpawnPoint } from '../../systems/EnemyManager.ts';
+import { EnemyManager } from '../../systems/EnemyManager.ts';
 import { Pickups } from '../../systems/Pickups.ts';
 import { Hud } from '../../ui/Hud.ts';
 import { AimReticle } from '../../ui/AimReticle.ts';
 import { Pathfinder } from '../../systems/Pathfinder.ts';
+import { BALANCE } from '../../config/balance.ts';
 
 const PLAYER_SPAWN = { x: 100, y: 100 };
 
@@ -36,6 +36,7 @@ export class GameScene extends Phaser.Scene {
   private pickups!: Pickups;
   private hud!: Hud;
   private pathfinder!: Pathfinder;
+  private dynamites!: Phaser.Physics.Arcade.Group;
 
   private fireKey!: Phaser.Input.Keyboard.Key;
   private reloadKey!: Phaser.Input.Keyboard.Key;
@@ -54,14 +55,15 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, playerSpawn.x, playerSpawn.y, this.level.walls);
 
     this.hud = new Hud(this, this.player, this.level);
-    this.weapon = new Weapon(this, this.player, this.projectiles, ({ ammo, maxAmmo, reloading }) => {
-      this.hud.setAmmo(ammo, maxAmmo, reloading);
+    this.weapon = new Weapon(this, this.player, this.projectiles, (state) => {
+      this.hud.setAmmo(state);
     });
     this.reticle = new AimReticle(this, this.player, this.weapon);
     this.hud.minimap.ignore(this.reticle.circle);
 
     this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles, this.pathfinder);    
     this.enemies.spawnWave(this.level.getSpawns("enemy"));
+    this.dynamites = this.physics.add.group();
     
     this.pickups = new Pickups(this, this.level, this.player, (value) => {
       this.score += value;
@@ -92,7 +94,6 @@ export class GameScene extends Phaser.Scene {
     this.weapon.update();
     this.pathfinder.update();
     this.hud.playerDot.setPosition(this.player.x, this.player.y);
-    this.hud.setEquipedGun(this.weapon.equipedGun, this.kills);
   }
 
   private setupCamera() {
@@ -102,17 +103,17 @@ export class GameScene extends Phaser.Scene {
 
   private setupInput() {
     const keyboard = this.input.keyboard!;
-    keyboard.on('keydown-ONE', () =>{
-      this.weapon.equipedGun = 'revolver';
+    ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'].forEach((key, index) => {
+      keyboard.on(`keydown-${key}`, () => this.weapon.selectSlot(index));
     });
-    keyboard.on('keydown-TWO', () =>{
-      if (this.kills >= BALANCE.rifleUnlockKills) {
-      this.weapon.equipedGun = 'rifle';
-      }
-     });
-    keyboard.on('keydown-THREE', () =>{
-      if (this.kills >= BALANCE.shotgunUnlockKills) {
-      this.weapon.equipedGun = 'shotgun';
+    this.input.on('wheel', (
+      _pointer: Phaser.Input.Pointer,
+      _currentlyOver: Phaser.GameObjects.GameObject[],
+      _deltaX: number,
+      deltaY: number,
+    ) => {
+      if (deltaY !== 0) {
+        this.weapon.cycleSlot(deltaY > 0 ? 1 : -1);
       }
     });
     this.fireKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -138,11 +139,52 @@ export class GameScene extends Phaser.Scene {
       (bullet as Phaser.GameObjects.Rectangle).destroy();
       this.onPlayerHit();
     });
+    this.physics.add.overlap(this.enemies.group, this.dynamites, (_enemy, object) => {
+      const dynamite = object as Phaser.GameObjects.Arc;
+      if (!dynamite.active) {
+        return;
+      }
+      const x = dynamite.x;
+      const y = dynamite.y;
+      dynamite.destroy();
+      this.explodeDynamite(x, y);
+      this.enemies.explodeAt(x, y, BALANCE.dynamite.blastRadius);
+    });
   }
 
   private fireAtPointer() {
     const pointer = this.input.activePointer;
+    if (this.weapon.currentSlot.item === 'dynamite') {
+      this.placeDynamite();
+      return;
+    }
     this.weapon.fire(pointer.worldX, pointer.worldY, this.reticle.radius);
+  }
+
+  private placeDynamite() {
+    if (!this.weapon.consumeDynamite()) {
+      return;
+    }
+    const dynamite = this.add.circle(this.player.x, this.player.y, 12, 0xd35400);
+    dynamite.setStrokeStyle(3, 0xffd000);
+    this.physics.add.existing(dynamite);
+    const body = dynamite.body as Phaser.Physics.Arcade.Body;
+    const radius = BALANCE.dynamite.activationRadius;
+    body.setCircle(radius, 12 - radius, 12 - radius);
+    this.dynamites.add(dynamite);
+    this.sound.play('sixshooterinsert', { volume: 0.2 });
+  }
+
+  private explodeDynamite(x: number, y: number) {
+    const explosion = this.add.circle(x, y, 12, 0xff6b00, 0.8).setDepth(20);
+    this.tweens.add({
+      targets: explosion,
+      radius: BALANCE.dynamite.blastRadius,
+      alpha: 0,
+      duration: 350,
+      onComplete: () => explosion.destroy(),
+    });
+    this.sound.play('ricochet-1', { volume: 0.4 });
   }
 
   private onPlayerHit() {

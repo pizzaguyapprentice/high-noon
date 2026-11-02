@@ -61,6 +61,14 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
     }
   }
 
+  explodeAt(x: number, y: number, radius: number) {
+    for (const enemy of this.group.getChildren() as Enemy[]) {
+      if (enemy.active && Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y) <= radius) {
+        this.onShot(enemy);
+      }
+    }
+  }
+
   private tryShoot(enemy: Enemy, now: number, kills: number) {
     if (!enemy.isReadyToFire(now)) {
       return;
@@ -74,11 +82,11 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
     this.projectiles.fireEnemyBullet(enemy.x, enemy.y, direction);
   }
 
-  private onShot(enemy: Enemy, bullet: Phaser.GameObjects.Rectangle) {
-    if (!bullet.active || !enemy.active) {
+  private onShot(enemy: Enemy, bullet?: Phaser.GameObjects.Rectangle) {
+    if (!enemy.active || (bullet && !bullet.active)) {
       return;
     }
-    bullet.destroy();
+    bullet?.destroy();
     enemy.destroy(); 
 
     this.scene.sound.play('hitmark', {
