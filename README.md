@@ -8,6 +8,7 @@ High Noon is a top down run and gun game. Once a Lutheran, Lars crossed the Rubi
 - R - Reload
 - Shift - Roll+Reload (invincibility frames + 1 free reload)
 - M - Toggle the mini map
+- Num - Weapon Selector
 
 ### HUD
 Currently the HUD shows:
