@@ -95,6 +95,21 @@ export class GameScene extends Phaser.Scene {
     this.pathfinder.update();
     this.hud.playerDot.setPosition(this.player.x, this.player.y);
     this.hud.setEquipedGun(this.weapon.equipedGun, this.kills);
+
+    [
+     ...this.projectiles.playerBullets.getChildren(),
+     ...this.projectiles.enemyBullets.getChildren(),
+    ].forEach((bullet)=>{
+     const { x, y } = bullet as Phaser.GameObjects.Rectangle;
+     const smokeTrail = this.add.circle(x, y, 3, 0x808080, 0.5);
+
+    this.tweens.add({
+     targets: smokeTrail,
+     alpha: 0,
+     duration: 250,
+     onComplete:()=>smokeTrail.destroy(),
+    });
+    });
   }
 
   private setupCamera() {
