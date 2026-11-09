@@ -9,4 +9,12 @@ A Phaser 4 + TypeScript game, built with [Deno](https://deno.com).
 The game's code is in `src/`, and the page, CSS, images, sounds and map are in `public/`. The Tiled map is
 `public/assets/map/testlevel.tmx`. Convert it to JSON for the game with `deno task map public/assets/map/testlevel.tmx`.
 
+## Controls
+
+- Move with `WASD` or the arrow keys.
+- Select one of the five hotbar slots with `1`-`5`, or cycle through them with the mouse wheel.
+- Fire the selected revolver with Space or the mouse. Press `R` to reload.
+- Select the dynamite slot and press Space or the mouse to place it. An enemy walking over it detonates it,
+  damaging enemies in the blast radius.
+
 Started from the [Phaser Vite TypeScript template](https://github.com/phaserjs/template-vite-ts) (see `LICENSE`).

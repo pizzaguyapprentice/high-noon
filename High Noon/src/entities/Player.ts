@@ -9,6 +9,9 @@ export class Player extends Phaser.GameObjects.Rectangle {
   } as const;
 
   declare body: Phaser.Physics.Arcade.Body;
+  readonly maxHealth = BALANCE.player.maxHealth;
+  private health: number = this.maxHealth;
+  private healthBar: Phaser.GameObjects.Graphics;
 
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd: MoveKeys;
@@ -24,6 +27,8 @@ export class Player extends Phaser.GameObjects.Rectangle {
     scene.physics.add.existing(this);
     this.body.setCollideWorldBounds(true);
     scene.physics.add.collider(this, walls);
+    this.healthBar = scene.add.graphics().setDepth(20);
+    this.updateHealthBar();
 
     const keyboard = scene.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
@@ -43,7 +48,22 @@ export class Player extends Phaser.GameObjects.Rectangle {
     this.invulnerableUntil = this.scene.time.now + 500
   }
 
+  get currentHealth(): number {
+    return this.health;
+  }
+
+  takeDamage(amount: number): boolean {
+    if (this.isInvulnerable) {
+      return false;
+    }
+    this.health = Math.max(0, this.health - amount);
+    this.updateHealthBar();
+    this.protectAfterHit();
+    return true;
+  }
+
   update(slowed: boolean) {
+    this.updateHealthBar();
     const input = this.readMoveInput();
 
     if (Phaser.Input.Keyboard.JustDown(this.dodgeKey)) {
@@ -58,6 +78,26 @@ export class Player extends Phaser.GameObjects.Rectangle {
     } else {
       this.body.setVelocity(input.x * speed, input.y * speed);
     }
+  }
+
+  private updateHealthBar() {
+    const width = 24;
+    const height = 4;
+    this.healthBar.clear();
+    this.healthBar.fillStyle(0x301010);
+    this.healthBar.fillRect(this.x - width / 2, this.y - 16, width, height);
+    this.healthBar.fillStyle(0x2ecc71);
+    this.healthBar.fillRect(
+      this.x - width / 2,
+      this.y - 16,
+      width * (this.health / this.maxHealth),
+      height,
+    );
+  }
+
+  destroy(fromScene?: boolean) {
+    this.healthBar?.destroy();
+    super.destroy(fromScene);
   }
 
   private readMoveInput(): Phaser.Math.Vector2 {

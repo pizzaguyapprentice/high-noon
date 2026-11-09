@@ -51,6 +51,9 @@ export class Weapon {
   }
 
   private get maxAmmo(): number {
+    if (this.equipedGun === 'dynamite') {
+      return 3;
+    }
     if (this.equipedGun === 'shotgun') {
       return 2;
     }
@@ -65,8 +68,20 @@ export class Weapon {
   }
 
 
+  consumeDynamite(): boolean {
+    if (this.equipedGun !== 'dynamite' || this.ammo <= 0) {
+      return false;
+    }
+    this.ammo -= 1;
+    this.notify();
+    return true;
+  }
+
   fire(targetX: number, targetY: number, spreadRadius: number): boolean {
-  
+    if (this.equipedGun === 'dynamite') {
+      return false;
+    }
+
     if(this.scene.time.now < this.shotDelay){
       return false;
     }
@@ -87,9 +102,11 @@ export class Weapon {
     const sideline = target.clone().subtract(from).normalize().rotate(Math.PI/2);
 
     let speed: number = BALANCE.revolver.bulletSpeed;
+    let damage: number = BALANCE.revolver.damage;
 
     if(this.equipedGun === 'rifle'){
       speed = 2000;
+      damage = 4;
       this.shotDelay = this.scene.time.now + 500;
     }
 
@@ -103,8 +120,9 @@ export class Weapon {
     if (this.equipedGun === 'shotgun') {
       this.shotDelay = this.scene.time.now + 1000;
       pelletCount = 5;
+      damage = 1;
     }
-    
+
     
     for (let i = 0; i < pelletCount; i++) {
       const offset = Phaser.Math.FloatBetween(-spreadRadius,spreadRadius);
@@ -145,7 +163,7 @@ export class Weapon {
   }
 
   startReload() {
-    if (this.reloading || this.ammo >= this.maxAmmo) {
+    if (this.equipedGun === 'dynamite' || this.reloading || this.ammo >= this.maxAmmo) {
       return;
     }
     this.reloading = true;
@@ -176,6 +194,9 @@ export class Weapon {
   }
 
   addRound() {
+    if (this.equipedGun === 'dynamite') {
+      return;
+    }
     this.ammo = Math.min(this.ammo + 1, this.maxAmmo);
     this.notify();
   }

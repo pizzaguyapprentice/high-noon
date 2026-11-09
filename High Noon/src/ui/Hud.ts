@@ -7,14 +7,18 @@ const LIGHT_PANEL = { backgroundColor: '#cdc3a5', padding: { x: 8, y: 4 } };
 const DARK_PANEL = { backgroundColor: '#2a2a2a', padding: { x: 8, y: 4 } };
 
 export class Hud {
+  private static readonly HOTBAR_DURATION = 2000;
   private cashText: Phaser.GameObjects.Text;
   private ammoText: Phaser.GameObjects.Text;
   private revolverText: Phaser.GameObjects.Text;
   private rifleText: Phaser.GameObjects.Text;
   private shotgunText: Phaser.GameObjects.Text;
+  private dynamiteText: Phaser.GameObjects.Text;
   private killText: Phaser.GameObjects.Text;
   private bountyText: Phaser.GameObjects.Text;
   private healthBar: Phaser.GameObjects.Image;
+  private hotbarGroup: Phaser.GameObjects.Group;
+  private hotbarHideTimer?: Phaser.Time.TimerEvent;
 
   hudGroup: Phaser.GameObjects.Group;
   minimap;
@@ -36,6 +40,9 @@ export class Hud {
     this.shotgunText = this.pin(scene.add.text(20, 320, '3: shotgun', {
       fontSize: '24px', ...LIGHT_PANEL,
     }));
+    this.dynamiteText = this.pin(scene.add.text(20, 360, '4: dynamite', {
+      fontSize: '24px', ...LIGHT_PANEL,
+    }));
     this.bountyText = this.pin(scene.add.text(850, 16, '', {
       fontSize: '22px', color: '#e00606', ...DARK_PANEL,
     }));
@@ -46,15 +53,19 @@ export class Hud {
     .setDisplaySize(120,120)
     .setScrollFactor(0)
     .setDepth(100);
-    
-    
+
+    this.hotbarGroup = scene.add.group([
+      this.revolverText,
+      this.rifleText,
+      this.shotgunText,
+      this.dynamiteText,
+    ]);
+    this.hotbarGroup.setVisible(false);
+
     this.hudGroup = scene.add.group([ 
 
     this.cashText,
     this.ammoText,
-    this.revolverText,
-    this.rifleText,
-    this.shotgunText,
     this.bountyText,
     this.killText,
     this.healthBar,
@@ -74,6 +85,7 @@ export class Hud {
     this.minimap.startFollow(player, true);
     this.minimap.setBounds(0, 0, level.width, level.height);
     this.minimap.ignore(this.hudGroup);
+    this.minimap.ignore(this.hotbarGroup);
 
     const minimapBorder = scene.add.rectangle(
     this.minimap.centerX,
@@ -85,7 +97,7 @@ export class Hud {
     minimapBorder.setDepth(100);
     this.minimap.ignore(minimapBorder); 
     
-    scene.input.keyboard!.on('keydown-M', (event: KeyboardEvent) =>{
+    scene.input.keyboard!.on('keydown-M', (_event: KeyboardEvent) =>{
       this.minimap.setVisible(!this.minimap.visible);
       minimapBorder.setVisible(!minimapBorder.visible);
       
@@ -107,14 +119,19 @@ export class Hud {
 
   setKills(kills: number) {
     if (kills < BALANCE.rifleUnlockKills) {
-    this.rifleText.setText('2̶:̶ ̶r̶i̶f̶l̶e̶ - kills: ' + (BALANCE.rifleUnlockKills - kills));
+    this.rifleText.setText('2: rifle - kills: ' + (BALANCE.rifleUnlockKills - kills));
     } else {
     this.rifleText.setText('2: rifle');
     }
     if (kills < BALANCE.shotgunUnlockKills) {
-    this.shotgunText.setText('3̶:̶ ̶s̶h̶o̶t̶g̶u̶n̶ - kills: ' + (BALANCE.shotgunUnlockKills - kills));
+    this.shotgunText.setText('3: shotgun - kills: ' + (BALANCE.shotgunUnlockKills - kills));
     } else {
     this.shotgunText.setText('3: shotgun');
+    }
+    if (kills < BALANCE.dynamiteUnlockKills) {
+    this.dynamiteText.setText('4: dynamite - kills: ' + (BALANCE.dynamiteUnlockKills - kills));
+    } else {
+    this.dynamiteText.setText('4: dynamite');
     }
     this.killText.setText(`Kills: ${kills}`);
     this.bountyText.setText(`Bounty: $${kills * BALANCE.economy.bountyPerKill}`);
@@ -142,11 +159,28 @@ export class Hud {
     } else {
     this.shotgunText.setColor('#2a0f0f');
     }
+
+    if (kills < BALANCE.dynamiteUnlockKills) {
+    this.dynamiteText.setColor('#747272');
+    } else if (gun === 'dynamite') {
+    this.dynamiteText.setColor('#e00606');
+    } else {
+    this.dynamiteText.setColor('#2a0f0f');
+    }
   }
 
   setAmmo(ammo: number, maxAmmo: number, reloading: boolean) {
     const prefix = reloading ? 'Reloading : ' : 'Ammo: ';
     this.ammoText.setText(`${prefix}${ammo}/${maxAmmo}`);
+  }
+
+  showHotbar() {
+    this.hotbarGroup.setVisible(true);
+    this.hotbarHideTimer?.remove();
+    this.hotbarHideTimer = this.hotbarGroup.scene.time.delayedCall(
+      Hud.HOTBAR_DURATION,
+      () => this.hotbarGroup.setVisible(false),
+    );
   }
 
   private pin(text: Phaser.GameObjects.Text) {

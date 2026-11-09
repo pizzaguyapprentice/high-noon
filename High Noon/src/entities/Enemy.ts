@@ -10,6 +10,9 @@ const REPATH_INTERVAL = 400;
 export class Enemy extends Phaser.GameObjects.Rectangle {
   
   declare body: Phaser.Physics.Arcade.Body;
+  readonly maxHealth = BALANCE.enemy.maxHealth;
+  private health: number = this.maxHealth;
+  private healthBar: Phaser.GameObjects.Graphics;
   
   lastKnownTarget = new Phaser.Math.Vector2();
   searchUntil = 0;
@@ -29,6 +32,8 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.body.setCollideWorldBounds(true);
+    this.healthBar = scene.add.graphics().setDepth(20);
+    this.updateHealthBar();
     this.enemyDot = scene.add.circle(x, y, 50, 0x0);
     this.enemyDot.setDepth(100);
     scene.cameras.main.ignore(this.enemyDot);
@@ -41,6 +46,15 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
 
   get aiState(): EnemyStateKey{
     return this.ai.current;
+  }
+
+  takeDamage(amount: number): boolean {
+    if (!this.active) {
+      return false;
+    }
+    this.health = Math.max(0, this.health - amount);
+    this.updateHealthBar();
+    return this.health <= 0;
   }
 
   think(perception: EnemyPerception){
@@ -138,6 +152,7 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
   }
 
   updateReloadBar(now: number) {
+    this.updateHealthBar();
     const remaining = this.reloadUntil - now;
     if (remaining > 0) {
       this.reloadBar.show(this.x, this.y, 1 - remaining / BALANCE.enemy.reloadTime, remaining);
@@ -146,8 +161,24 @@ export class Enemy extends Phaser.GameObjects.Rectangle {
     }
   }
 
+  private updateHealthBar() {
+    const width = 24;
+    const height = 4;
+    this.healthBar.clear();
+    this.healthBar.fillStyle(0x301010);
+    this.healthBar.fillRect(this.x - width / 2, this.y - 16, width, height);
+    this.healthBar.fillStyle(0xe74c3c);
+    this.healthBar.fillRect(
+      this.x - width / 2,
+      this.y - 16,
+      width * (this.health / this.maxHealth),
+      height,
+    );
+  }
+
   destroy(fromScene?: boolean) {
     this.enemyDot?.destroy();
+    this.healthBar?.destroy();
     this.reloadBar?.destroy();
     super.destroy(fromScene);
   }
