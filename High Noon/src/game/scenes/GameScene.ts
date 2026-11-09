@@ -89,6 +89,17 @@ export class GameScene extends Phaser.Scene {
 
     this.player.update(this.weapon.isReloading);
     this.enemies.update(this.kills);
+    this.enemies.tracePlayerBullets(this.game.loop.delta);
+    this.projectiles.traceEnemyBullets(
+      this.player,
+      (_player, bullet) => {
+        const enemyBullet = bullet as Phaser.GameObjects.Rectangle;
+        const damage = enemyBullet.getData('damage') ?? BALANCE.enemy.bulletDamage;
+        enemyBullet.destroy();
+        this.onPlayerHit(damage);
+      },
+      this.game.loop.delta,
+    );
     this.reticle.update();
     this.weapon.update();
     this.pathfinder.update();
