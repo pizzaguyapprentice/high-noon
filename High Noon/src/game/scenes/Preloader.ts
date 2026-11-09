@@ -44,6 +44,9 @@ export class Preloader extends Scene{
         for (let i = 1; i <= 22; i++) {
             this.load.audio(`ricochet-${i}`, `sounds/sfx/gunshots/ricochets/ricochet-${i}.mp3`);
         }
+        for (let i = 0; i <= 8; i++) {
+            this.load.audio(`death${i}`, `sounds/sfx/gunshots/death/death${i}.ogg`);
+        }
         this.load.image('logo', 'logo.png');
         this.load.audio('sixshootershot','sounds/sfx/gunshots/revolver/sixshootershot.mp3');
         this.load.audio('introjingle','sounds/sfx/introjingle.mp3');
@@ -52,7 +55,7 @@ export class Preloader extends Scene{
         this.load.audio('sixshootercylinder', 'sounds/sfx/gunshots/revolver/cylinder.mp3');
         this.load.audio('sixshooterinsert', 'sounds/sfx/gunshots/revolver/bullet.mp3');
         this.load.audio('hitmark', 'sounds/sfx/gunshots/death/hitmark.mp3');
-        this.load.audio('scream', 'sounds/sfx/gunshots/death/scream.mp3');
+        //this.load.audio('scream', 'sounds/sfx/gunshots/death/scream.mp3');
         this.load.audio('gameover', 'sounds/sfx/gameover.mp3');
         
         this.load.image('health4', 'health/health4.png');

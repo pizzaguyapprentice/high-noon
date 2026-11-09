@@ -134,7 +134,7 @@ export class Weapon {
       //const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
       //const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
 
-      this.projectiles.firePlayerBullet(from.x, from.y, landing.x, landing.y, speed);
+      this.projectiles.firePlayerBullet(from.x, from.y, landing.x, landing.y, speed,damage);
     }
 
     this.scene.sound.play('sixshootershot', { volume: 0.2 });

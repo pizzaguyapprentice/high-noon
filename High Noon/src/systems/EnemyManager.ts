@@ -97,9 +97,9 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
       volume: Phaser.Math.FloatBetween(0.5, 0.7),
       detune: Phaser.Math.Between(-500, 500),
     });
-    this.scene.sound.play('scream', {
-      volume: Phaser.Math.FloatBetween(0.1, 0.2),
-      detune: Phaser.Math.Between(-150, 800),
+    this.scene.sound.play(`death${Phaser.Math.Between(0, 8)}`, {
+      volume: Phaser.Math.FloatBetween(0.3, 0.35),
+      detune: Phaser.Math.Between(0, 800),
     });
 
     this.emit(EnemyManager.Events.Killed);
