@@ -60,6 +60,86 @@ export class Projectiles {
     });
   }
 
+  tracePlayerBullets(
+    targets: Phaser.Physics.Arcade.Group,
+    onHit: (target: Phaser.GameObjects.GameObject, bullet: Phaser.GameObjects.Rectangle) => void,
+    delta: number,
+  ) {
+    this.traceBullets(this.playerBullets, targets, onHit, delta);
+  }
+
+  traceEnemyBullets(
+    target: Phaser.GameObjects.GameObject,
+    onHit: (target: Phaser.GameObjects.GameObject, bullet: Phaser.GameObjects.Rectangle) => void,
+    delta: number,
+  ) {
+    const targetBounds = (target as Phaser.GameObjects.GameObject & {
+      getBounds: () => Phaser.Geom.Rectangle;
+    }).getBounds();
+    this.traceBullets(
+      this.enemyBullets,
+      undefined,
+      (_unusedTarget, bullet) => onHit(target, bullet),
+      delta,
+      targetBounds,
+    );
+  }
+
+  private traceBullets(
+    bullets: Phaser.Physics.Arcade.Group,
+    targets: Phaser.Physics.Arcade.Group | undefined,
+    onHit: (target: Phaser.GameObjects.GameObject, bullet: Phaser.GameObjects.Rectangle) => void,
+    delta: number,
+    singleTargetBounds?: Phaser.Geom.Rectangle,
+  ) {
+    const distanceScale = delta / 1000;
+    for (const bullet of bullets.getChildren() as Phaser.GameObjects.Rectangle[]) {
+      if (!bullet.active) {
+        continue;
+      }
+
+      const body = bullet.body as Phaser.Physics.Arcade.Body;
+      const startX = bullet.x;
+      const startY = bullet.y;
+      const endX = startX + body.velocity.x * distanceScale;
+      const endY = startY + body.velocity.y * distanceScale;
+      const line = new Phaser.Geom.Line(startX, startY, endX, endY);
+
+      if (singleTargetBounds) {
+        if (this.lineIntersectsTarget(line, singleTargetBounds, bullet)) {
+          onHit(bullet, bullet);
+        }
+        continue;
+      }
+
+      for (const target of targets!.getChildren()) {
+        const targetWithBounds = target as Phaser.GameObjects.GameObject & {
+          getBounds: () => Phaser.Geom.Rectangle;
+        };
+        if (!target.active || !this.lineIntersectsTarget(line, targetWithBounds.getBounds(), bullet)) {
+          continue;
+        }
+        onHit(target, bullet);
+        break;
+      }
+    }
+  }
+
+  private lineIntersectsTarget(
+    line: Phaser.Geom.Line,
+    bounds: Phaser.Geom.Rectangle,
+    bullet: Phaser.GameObjects.Rectangle,
+  ): boolean {
+    const padding = Math.max(bullet.displayWidth, bullet.displayHeight) / 2;
+    const expanded = new Phaser.Geom.Rectangle(
+      bounds.x - padding,
+      bounds.y - padding,
+      bounds.width + padding * 2,
+      bounds.height + padding * 2,
+    );
+    return Phaser.Geom.Intersects.LineToRectangle(line, expanded);
+  }
+
   private land(bullet: Phaser.GameObjects.Rectangle, x: number, y: number) {
     const body = bullet.body as Phaser.Physics.Arcade.Body;
     body.stop();

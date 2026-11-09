@@ -56,9 +56,16 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
       if(enemy.aiState === "advancing"){
         this.tryShoot(enemy,now,kills);
       }
+
       enemy.enemyDot.setPosition(enemy.x, enemy.y);
       enemy.updateReloadBar(now);
     }
+  }
+
+  tracePlayerBullets(delta: number) {
+    this.projectiles.tracePlayerBullets(this.group, (enemy, bullet) => {
+      this.onShot(enemy as Enemy, bullet);
+    }, delta);
   }
 
   explodeAt(x: number, y: number, radius: number) {
