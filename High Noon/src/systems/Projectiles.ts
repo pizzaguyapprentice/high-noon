@@ -23,8 +23,16 @@ export class Projectiles {
   }
 
 
-  firePlayerBullet(fromX: number, fromY: number, targetX: number, targetY: number, speed: number) {
+  firePlayerBullet(
+    fromX: number,
+    fromY: number,
+    targetX: number,
+    targetY: number,
+    speed: number,
+    damage: number,
+  ) {
     const bullet = this.scene.add.rectangle(fromX, fromY, 7, 7, 0x0);
+    bullet.setData('damage', damage);
 
     this.playerBullets.add(bullet);
     this.scene.physics.moveTo(bullet, targetX, targetY, speed);
@@ -40,6 +48,7 @@ export class Projectiles {
   fireEnemyBullet(fromX: number, fromY: number, direction: Phaser.Math.Vector2) {
     const speed = BALANCE.enemy.bulletSpeed;
     const bullet = this.scene.add.rectangle(fromX, fromY, 6, 6, 0xffd000);
+    bullet.setData('damage', BALANCE.enemy.bulletDamage);
 
     this.enemyBullets.add(bullet);
     (bullet.body as Phaser.Physics.Arcade.Body).setVelocity(direction.x * speed, direction.y * speed);

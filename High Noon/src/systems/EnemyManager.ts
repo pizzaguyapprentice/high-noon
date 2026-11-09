@@ -86,8 +86,12 @@ export class EnemyManager extends Phaser.Events.EventEmitter {
     if (!enemy.active || (bullet && !bullet.active)) {
       return;
     }
+    const damage = bullet?.getData('damage') ?? enemy.maxHealth;
     bullet?.destroy();
-    enemy.destroy(); 
+    if (!enemy.takeDamage(damage)) {
+      return;
+    }
+    enemy.destroy();
 
     this.scene.sound.play('hitmark', {
       volume: Phaser.Math.FloatBetween(0.5, 0.7),

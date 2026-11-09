@@ -25,7 +25,6 @@ const PLAYER_SPAWN = { x: 100, y: 100 };
 export class GameScene extends Phaser.Scene {
   private score = 0;
   private kills = 0;
-  private health = 4;
 
   private level!: Level;
   private projectiles!: Projectiles;
@@ -46,7 +45,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    this.health = 4;
     this.level = new Level(this, 'testlevel');
     this.pathfinder = new Pathfinder(this.level.walls);
     this.projectiles = new Projectiles(this, this.level.walls);
@@ -120,22 +118,48 @@ export class GameScene extends Phaser.Scene {
   private setupInput() {
     const keyboard = this.input.keyboard!;
     keyboard.on('keydown-ONE', () =>{
+      this.hud.showHotbar();
       this.weapon.equipedGun = 'revolver';
     });
     keyboard.on('keydown-TWO', () =>{
+      this.hud.showHotbar();
       if (this.kills >= BALANCE.rifleUnlockKills) {
       this.weapon.equipedGun = 'rifle';
       }
      });
     keyboard.on('keydown-THREE', () =>{
-      if (this.kills >= BALANCE.shotgunUnlockKills) {
+       this.hud.showHotbar();
+       if (this.kills >= BALANCE.shotgunUnlockKills) {
       this.weapon.equipedGun = 'shotgun';
       }
     });
     keyboard.on('keydown-FOUR', () =>{
+      this.hud.showHotbar();
       if (this.kills >= BALANCE.dynamiteUnlockKills) {
       this.weapon.equipedGun = 'dynamite';
       }
+    });
+    this.input.on('wheel', (
+      _pointer: Phaser.Input.Pointer,
+      _gameObjects: Phaser.GameObjects.GameObject[],
+      _deltaX: number,
+      deltaY: number,
+    ) => {
+      const availableGuns = ['revolver'];
+      if (this.kills >= BALANCE.rifleUnlockKills) {
+        availableGuns.push('rifle');
+      }
+      if (this.kills >= BALANCE.shotgunUnlockKills) {
+        availableGuns.push('shotgun');
+      }
+      if (this.kills >= BALANCE.dynamiteUnlockKills) {
+        availableGuns.push('dynamite');
+      }
+      const currentIndex = availableGuns.indexOf(this.weapon.equipedGun);
+      const direction = deltaY > 0 ? 1 : -1;
+      const nextIndex = (currentIndex + direction + availableGuns.length) % availableGuns.length;
+      this.weapon.equipedGun = availableGuns[nextIndex];
+      this.hud.showHotbar();
     });
     this.fireKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.reloadKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
@@ -157,8 +181,10 @@ export class GameScene extends Phaser.Scene {
 
     this.physics.add.overlap(this.player, this.enemies.group, () => this.onPlayerHit());
     this.physics.add.overlap(this.player, this.projectiles.enemyBullets, (_player, bullet) => {
-      (bullet as Phaser.GameObjects.Rectangle).destroy();
-      this.onPlayerHit();
+      const enemyBullet = bullet as Phaser.GameObjects.Rectangle;
+      const damage = enemyBullet.getData('damage') ?? BALANCE.enemy.bulletDamage;
+      enemyBullet.destroy();
+      this.onPlayerHit(damage);
     });
     this.physics.add.overlap(this.enemies.group, this.dynamites, (_enemy, object) => {
       const dynamite = object as Phaser.GameObjects.Arc;
@@ -208,16 +234,14 @@ export class GameScene extends Phaser.Scene {
     this.sound.play('ricochet-1', { volume: 0.4 });
   }
 
-  private onPlayerHit() {
-    if (this.player.isInvulnerable) {
+  private onPlayerHit(damage = 1) {
+    if (!this.player.takeDamage(damage)) {
       return;
     }
 
-    this.health -= 1;
-    this.player.protectAfterHit();
-    this.hud.setHealth(this.health);
+    this.hud.setHealth(this.player.currentHealth);
 
-    if (this.health <= 0){
+    if (this.player.currentHealth <= 0){
     this.score = 0;
     this.kills = 0;
     this.scene.start('GameOver');

@@ -97,9 +97,11 @@ export class Weapon {
     }
 
     let speed: number = BALANCE.revolver.bulletSpeed;
+    let damage: number = BALANCE.revolver.damage;
 
     if(this.equipedGun === 'rifle'){
       speed = 2000;
+      damage = 4;
       this.shotDelay = this.scene.time.now + 500;
     }
 
@@ -113,6 +115,7 @@ export class Weapon {
     if (this.equipedGun === 'shotgun') {
       this.shotDelay = this.scene.time.now + 1000;
       pelletCount = 5;
+      damage = 1;
     }
 
     
@@ -120,7 +123,7 @@ export class Weapon {
       const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
       const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
 
-      this.projectiles.firePlayerBullet(this.owner.x, this.owner.y, x, y, speed);
+      this.projectiles.firePlayerBullet(this.owner.x, this.owner.y, x, y, speed, damage);
     }
 
     this.scene.sound.play('sixshootershot', { volume: 0.2 });

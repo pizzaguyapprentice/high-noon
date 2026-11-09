@@ -3,6 +3,7 @@ export const BALANCE = {
   shotgunUnlockKills: 3,
   dynamiteUnlockKills: 4,
   player: {
+    maxHealth: 4,
     speed: 100,
     reloadSpeed: 80,
     dodgeCooldown: 1500,
@@ -10,6 +11,7 @@ export const BALANCE = {
     dodgeMultiplier: 4,
   },
   revolver: {
+    damage: 2,
     maxAmmo: 6,
     reloadPerBullet: 500,
     bulletSpeed: 1500,
@@ -26,6 +28,8 @@ export const BALANCE = {
     blastRadius: 160,
   },
   enemy: {
+    maxHealth: 2,
+    bulletDamage: 2,
     speed: 60,
     speedPerKill: 3,
     bulletSpeed: 500,
