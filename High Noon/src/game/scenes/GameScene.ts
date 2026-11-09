@@ -58,7 +58,9 @@ export class GameScene extends Phaser.Scene {
       this.hud.setAmmo(ammo, maxAmmo, reloading);
     });
     this.reticle = new AimReticle(this, this.player, this.weapon);
-    this.hud.minimap.ignore(this.reticle.circle);
+    
+    //this.hud.minimap.ignore(this.reticle.circle);
+    this.hud.minimap.ignore(this.reticle.cone);
 
     this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles, this.pathfinder);    
     this.enemies.spawnWave(this.level.getSpawns("enemy"));
@@ -71,7 +73,6 @@ export class GameScene extends Phaser.Scene {
 
     this.hud.setCash(this.score);
     this.hud.setKills(this.kills);
-   
     this.setupCamera();
     this.setupInput();
     this.setupRules();
@@ -141,8 +142,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private fireAtPointer() {
-    const pointer = this.input.activePointer;
-    this.weapon.fire(pointer.worldX, pointer.worldY, this.reticle.radius);
+    //const pointer = this.input.activePointer;
+    this.weapon.fire(this.reticle.aim.x, this.reticle.aim.y, this.reticle.radius);
   }
 
   private onPlayerHit() {

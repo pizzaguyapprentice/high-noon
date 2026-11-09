@@ -80,6 +80,11 @@ export class Weapon {
     if (this.ammo <= 0) {
       return false;
     }
+    //
+
+    const from = new Phaser.Math.Vector2(this.owner.x, this.owner.y);
+    const target = new Phaser.Math.Vector2(targetX, targetY);
+    const sideline = target.clone().subtract(from).normalize().rotate(Math.PI/2);
 
     let speed: number = BALANCE.revolver.bulletSpeed;
 
@@ -102,10 +107,16 @@ export class Weapon {
     
     
     for (let i = 0; i < pelletCount; i++) {
-      const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
-      const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
+      const offset = Phaser.Math.FloatBetween(-spreadRadius,spreadRadius);
+      const crossingpoint = target.clone().add(sideline.clone().scale(offset));
+      //10-20 pixels overshoot
+      const overshoot = Phaser.Math.FloatBetween(10, 20);
+      const pelletdirection = crossingpoint.clone().subtract(from).normalize();
+      const landing = crossingpoint.clone().add(pelletdirection.scale(overshoot));
+      //const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
+      //const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
 
-      this.projectiles.firePlayerBullet(this.owner.x, this.owner.y, x, y, speed);
+      this.projectiles.firePlayerBullet(from.x, from.y, landing.x, landing.y, speed);
     }
 
     this.scene.sound.play('sixshootershot', { volume: 0.2 });
