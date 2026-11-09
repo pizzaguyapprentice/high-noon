@@ -50,4 +50,8 @@ export const BALANCE = {
     pickupCount: 6,
     bountyPerKill: 10,
   },
+  beerHeal: {
+    placedOnMap: 15,
+    healAmount: 2,
+  },
 } as const;

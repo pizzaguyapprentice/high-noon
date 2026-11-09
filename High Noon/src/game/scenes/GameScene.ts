@@ -65,11 +65,17 @@ export class GameScene extends Phaser.Scene {
     this.enemies.spawnWave(this.level.getSpawns("enemy"));
     this.dynamites = this.physics.add.group();
     
-    this.pickups = new Pickups(this, this.level, this.player, (value) => {
-      this.score += value;
+    this.pickups = new Pickups(this, this.level, this.player);
+
+    this.pickups.spawn(BALANCE.economy.pickupCount, '$', 'green', () => {
+      this.score += BALANCE.economy.pickupValue;
       this.hud.setCash(this.score);
     });
-    this.pickups.spawn();
+
+    this.pickups.spawn(BALANCE.beerHeal.placedOnMap, '🍺', '#6262626c', () => {
+      this.player.beerHeal(BALANCE.beerHeal.healAmount);
+      this.hud.setHealth(this.player.currentHealth);
+    },{left: 2, right: 2, top: 2, bottom: 2}, 'heal');
 
     this.hud.setCash(this.score);
     this.hud.setKills(this.kills);
@@ -252,6 +258,11 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
+    this.sound.play(`playerhit${Phaser.Math.Between(0, 2)}`, {
+      volume: Phaser.Math.FloatBetween(0.3, 0.35),
+      detune: Phaser.Math.Between(-600, -350),
+    });
+    
     this.hud.setHealth(this.player.currentHealth);
 
     if (this.player.currentHealth <= 0){

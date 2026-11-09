@@ -1,5 +1,4 @@
 import * as Phaser from 'phaser';
-import { BALANCE } from '../config/balance.ts';
 import { Level } from '../world/Level.ts';
 
 
@@ -10,7 +9,6 @@ export class Pickups {
     private scene: Phaser.Scene,
     private level: Level,
     player: Phaser.GameObjects.GameObject,
-    private onCollect: (value: number) => void,
   ) {
     this.group = scene.physics.add.group({
       collideWorldBounds: true,
@@ -24,26 +22,35 @@ export class Pickups {
     });
   }
 
-  spawn(count: number = BALANCE.economy.pickupCount) {
+  spawn(
+  count: number,
+  symbol: string,
+  backgroundColor: string,
+  onCollect: () => void,
+   padding: Phaser.Types.GameObjects.Text.TextPadding = { left: 12, right: 12 },
+   sound = 'moneypickup',
+  ) {
     for (let i = 0; i < count; i += 1) {
       const { x, y } = this.level.findFreeSpot();
-      const pickup = this.scene.add.text(x, y, '$', {
+      const pickup = this.scene.add.text(x, y, symbol, {
         color: 'white',
-        backgroundColor: 'green',
+        backgroundColor,
         fontSize: '22px',
-        padding: { left: 12, right: 12 },
+        padding,
       });
 
+      pickup.setData('onCollect', onCollect);
+      pickup.setData('sound', sound);
       this.group.add(pickup);
     }
   }
 
   private collect(pickup: Phaser.GameObjects.Text) {
-    if (!pickup.active) {
-      return;
-    }
+    pickup.getData('onCollect')();
+    this.scene.sound.play(pickup.getData('sound'), {
+     volume: 0.4,
+     detune: Phaser.Math.Between(-100, 100),
+    });
     pickup.destroy();
-    this.scene.sound.play('moneypickup', { volume: 0.2, detune: Phaser.Math.Between(-100, 100) });
-    this.onCollect(BALANCE.economy.pickupValue);
   }
 }

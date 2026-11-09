@@ -52,6 +52,11 @@ export class Player extends Phaser.GameObjects.Rectangle {
     return this.health;
   }
 
+  beerHeal(amount: number) {
+    this.health = Math.min(this.maxHealth, this.health + amount);
+    this.updateHealthBar();
+  }
+
   takeDamage(amount: number): boolean {
     if (this.isInvulnerable) {
       return false;
