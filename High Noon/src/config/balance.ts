@@ -47,6 +47,18 @@ export const BALANCE = {
   },
 
   //pickups
+
+  cowboyHat: {
+    placedOnMap: 7,
+    emoji: "🤠",
+    bgColor: "#6262626c",
+    sound: "moneypickup",
+    size: 25,
+    padding: { left: 2, right: 2, top: 2, bottom: 2 },
+    speedMult: 2,
+    duration: 20000,
+  },
+
   beerHeal: {
     placedOnMap: 15,
     healAmount: 2,
@@ -76,4 +88,5 @@ export const BALANCE = {
     size: 25,
     padding: { left: 2, right: 2, top: 2, bottom: 2 },
   },
+
 } as const;

@@ -105,6 +105,18 @@ export class GameScene extends Phaser.Scene {
       },
     );
 
+    this.pickups.spawn(
+      BALANCE.cowboyHat.placedOnMap,
+      BALANCE.cowboyHat.emoji,
+      BALANCE.cowboyHat.bgColor,
+      BALANCE.cowboyHat.sound,
+      BALANCE.cowboyHat.size,
+      BALANCE.cowboyHat.padding,
+      () => {
+        this.player.cowbowSpeedBoost();
+      },
+    );
+
     this.hud.setCash(this.score);
     this.hud.setKills(this.kills);
     this.setupCamera();

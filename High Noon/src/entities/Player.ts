@@ -20,6 +20,7 @@ export class Player extends Phaser.GameObjects.Rectangle {
   private lastDodgeAt = -Infinity;
   private dodgeDirection = new Phaser.Math.Vector2();
   private invulnerableUntil = 0;
+  private speedboostUntil = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number, walls: Phaser.Tilemaps.TilemapLayer) {
     super(scene, x, y, 16, 16, 0x0f4d0f);
@@ -57,6 +58,10 @@ export class Player extends Phaser.GameObjects.Rectangle {
     this.updateHealthBar();
   }
 
+  cowbowSpeedBoost() {
+    this.speedboostUntil = this.scene.time.now + BALANCE.cowboyHat.duration;
+  }
+
   takeDamage(amount: number): boolean {
     if (this.isInvulnerable) {
       return false;
@@ -75,7 +80,11 @@ export class Player extends Phaser.GameObjects.Rectangle {
       this.tryDodge(input);
     }
 
-    const speed = slowed ? BALANCE.player.reloadSpeed : BALANCE.player.speed;
+    let speed: number = slowed ? BALANCE.player.reloadSpeed : BALANCE.player.speed;
+
+    if (this.scene.time.now < this.speedboostUntil) {
+      speed *= BALANCE.cowboyHat.speedMult;
+    }
 
     if (this.isDodging) {
       const dodgeSpeed = speed * BALANCE.player.dodgeMultiplier;
