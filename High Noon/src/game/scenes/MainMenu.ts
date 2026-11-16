@@ -40,19 +40,20 @@ export class MainMenu extends Scene {
   private drawMenu() {
     this.menuItems = [];
     this.add.image(512, 384, "background");
-    this.add.rectangle(512, 384, 1024, 768, 0x0b1018, this.pauseGame ? 0.72 : 0.45);
+    this.add.rectangle(512, 384, 1024, 768, 0x0b1018, this.pauseGame ? 0.72 : 0.1);
     this.add.image(512, 240, "logo").setScale(0.85);
-
-    this.add.text(512, 350, this.pauseGame ? "Paused" : "High Noon", {
-      ...TEXT_STYLE,
-      fontSize: 42,
-    }).setOrigin(0.5);
 
     this.showMainMenu();
   }
 
   private showMainMenu() {
     this.clearMenuItems();
+    if (this.pauseGame) {
+      this.addMenuText(512, 350, "Paused", {
+        ...TEXT_STYLE,
+        fontSize: 42,
+      });
+    }
     this.addButton(512, 440, "PLAY", () => {
       if (this.pauseGame) {
         this.closePauseMenu();

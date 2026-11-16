@@ -134,7 +134,7 @@ export class Hud {
     this.dynamiteText.setText('4: dynamite');
     }
     this.killText.setText(`Kills: ${kills}`);
-    this.bountyText.setText(`Bounty: $${kills * BALANCE.economy.bountyPerKill}`);
+    this.bountyText.setText("Bounty: $" + kills * BALANCE.cash.value);
   }
 
   setEquipedGun(gun: string, kills: number) {

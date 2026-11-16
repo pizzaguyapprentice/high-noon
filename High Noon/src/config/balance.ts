@@ -63,7 +63,7 @@ export const BALANCE = {
     emoji: "💵",
     bgColor: "#6262626c",
     sound: "moneypickup",
-    size: 22,
+    size: 30,
     padding: { left: 2, right: 2, top: 2, bottom: 2 },
   },
 
@@ -73,7 +73,7 @@ export const BALANCE = {
     emoji: "💰",
     bgColor: "#6262626c",
     sound: "moneypickup",
-    size: 22,
+    size: 25,
     padding: { left: 2, right: 2, top: 2, bottom: 2 },
   },
 } as const;
