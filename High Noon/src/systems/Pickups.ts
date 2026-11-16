@@ -24,18 +24,18 @@ export class Pickups {
 
   spawn(
   count: number,
-  symbol: string,
+  emoji: string,
   backgroundColor: string,
+  sound: string,
+  size: number,
+  padding: { left: number; right: number; top: number; bottom: number },
   onCollect: () => void,
-   padding: Phaser.Types.GameObjects.Text.TextPadding = { left: 12, right: 12 },
-   sound = 'moneypickup',
   ) {
     for (let i = 0; i < count; i += 1) {
       const { x, y } = this.level.findFreeSpot();
-      const pickup = this.scene.add.text(x, y, symbol, {
-        color: 'white',
+      const pickup = this.scene.add.text(x, y, emoji, {
         backgroundColor,
-        fontSize: '22px',
+        fontSize: size + "px",
         padding,
       });
 

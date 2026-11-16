@@ -66,21 +66,43 @@ export class GameScene extends Phaser.Scene {
 
     this.pickups = new Pickups(this, this.level, this.player);
 
-    this.pickups.spawn(BALANCE.economy.pickupCount, "$", "green", () => {
-      this.score += BALANCE.economy.pickupValue;
-      this.hud.setCash(this.score);
-    });
+    this.pickups.spawn(
+      BALANCE.cash.placedOnMap,
+      BALANCE.cash.emoji,
+      BALANCE.cash.bgColor,
+      BALANCE.cash.sound,
+      BALANCE.cash.size,
+      BALANCE.cash.padding,
+      () => {
+        this.score += BALANCE.cash.value;
+        this.hud.setCash(this.score);
+      },
+    );
+
+    this.pickups.spawn(
+      BALANCE.goldBag.placedOnMap,
+      BALANCE.goldBag.emoji,
+      BALANCE.goldBag.bgColor,
+      BALANCE.goldBag.sound,
+      BALANCE.goldBag.size,
+      BALANCE.goldBag.padding,
+      () => {
+        this.score += BALANCE.goldBag.value;
+        this.hud.setCash(this.score);
+      },
+    );
 
     this.pickups.spawn(
       BALANCE.beerHeal.placedOnMap,
-      "🍺",
-      "#6262626c",
+      BALANCE.beerHeal.emoji,
+      BALANCE.beerHeal.bgColor,
+      BALANCE.beerHeal.sound,
+      BALANCE.beerHeal.size,
+      BALANCE.beerHeal.padding,
       () => {
         this.player.beerHeal(BALANCE.beerHeal.healAmount);
         this.hud.setHealth(this.player.currentHealth);
       },
-      { left: 2, right: 2, top: 2, bottom: 2 },
-      "heal",
     );
 
     this.hud.setCash(this.score);

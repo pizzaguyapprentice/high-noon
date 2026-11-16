@@ -45,13 +45,35 @@ export const BALANCE = {
     searchDuration: 6000,   
     searchSpeedFactor: 0.75,
   },
-  economy: {
-    pickupValue: 10,
-    pickupCount: 6,
-    bountyPerKill: 10,
-  },
+
+  //pickups
   beerHeal: {
     placedOnMap: 15,
     healAmount: 2,
+    emoji: "🍺",
+    bgColor: "#6262626c",
+    sound: "heal",
+    size: 25,
+    padding: { left: 2, right: 2, top: 2, bottom: 2 },
+  },
+
+  cash: {
+    placedOnMap: 15,
+    value: 10,
+    emoji: "💵",
+    bgColor: "#6262626c",
+    sound: "moneypickup",
+    size: 22,
+    padding: { left: 2, right: 2, top: 2, bottom: 2 },
+  },
+
+  goldBag: {
+    placedOnMap: 5,
+    value: 50,
+    emoji: "💰",
+    bgColor: "#6262626c",
+    sound: "moneypickup",
+    size: 22,
+    padding: { left: 2, right: 2, top: 2, bottom: 2 },
   },
 } as const;
