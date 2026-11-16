@@ -1,14 +1,14 @@
-import * as Phaser from 'phaser';
-import { Level } from '../../world/Level.ts';
-import { Player } from '../../entities/Player.ts';
-import { Projectiles } from '../../systems/Projectiles.ts';
-import { Weapon } from '../../systems/Weapon.ts';
-import { EnemyManager } from '../../systems/EnemyManager.ts';
-import { Pickups } from '../../systems/Pickups.ts';
-import { Hud } from '../../ui/Hud.ts';
-import { AimReticle } from '../../ui/AimReticle.ts';
-import { Pathfinder } from '../../systems/Pathfinder.ts';
-import { BALANCE } from '../../config/balance.ts';
+import * as Phaser from "phaser";
+import { Level } from "../../world/Level.ts";
+import { Player } from "../../entities/Player.ts";
+import { Projectiles } from "../../systems/Projectiles.ts";
+import { Weapon } from "../../systems/Weapon.ts";
+import { EnemyManager } from "../../systems/EnemyManager.ts";
+import { Pickups } from "../../systems/Pickups.ts";
+import { Hud } from "../../ui/Hud.ts";
+import { AimReticle } from "../../ui/AimReticle.ts";
+import { Pathfinder } from "../../systems/Pathfinder.ts";
+import { BALANCE } from "../../config/balance.ts";
 
 const PLAYER_SPAWN = { x: 100, y: 100 };
 
@@ -20,7 +20,6 @@ const PLAYER_SPAWN = { x: 100, y: 100 };
 //   { x: 800, y: 500 },
 //   { x: 800, y: 600 },
 // ];
-
 
 export class GameScene extends Phaser.Scene {
   private score = 0;
@@ -41,15 +40,15 @@ export class GameScene extends Phaser.Scene {
   private reloadKey!: Phaser.Input.Keyboard.Key;
 
   constructor() {
-    super('GameScene');
+    super("GameScene");
   }
 
   create() {
-    this.level = new Level(this, 'testlevel');
+    this.level = new Level(this, "testlevel");
     this.pathfinder = new Pathfinder(this.level.walls);
     this.projectiles = new Projectiles(this, this.level.walls);
 
-    const playerSpawn = this.level.getSpawns('player')[0] ?? PLAYER_SPAWN;
+    const playerSpawn = this.level.getSpawns("player")[0] ?? PLAYER_SPAWN;
     this.player = new Player(this, playerSpawn.x, playerSpawn.y, this.level.walls);
 
     this.hud = new Hud(this, this.player, this.level);
@@ -57,25 +56,32 @@ export class GameScene extends Phaser.Scene {
       this.hud.setAmmo(ammo, maxAmmo, reloading);
     });
     this.reticle = new AimReticle(this, this.player, this.weapon);
-    
+
     //this.hud.minimap.ignore(this.reticle.circle);
     this.hud.minimap.ignore(this.reticle.cone);
 
-    this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles, this.pathfinder);    
+    this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles, this.pathfinder);
     this.enemies.spawnWave(this.level.getSpawns("enemy"));
     this.dynamites = this.physics.add.group();
-    
+
     this.pickups = new Pickups(this, this.level, this.player);
 
-    this.pickups.spawn(BALANCE.economy.pickupCount, '$', 'green', () => {
+    this.pickups.spawn(BALANCE.economy.pickupCount, "$", "green", () => {
       this.score += BALANCE.economy.pickupValue;
       this.hud.setCash(this.score);
     });
 
-    this.pickups.spawn(BALANCE.beerHeal.placedOnMap, '🍺', '#6262626c', () => {
-      this.player.beerHeal(BALANCE.beerHeal.healAmount);
-      this.hud.setHealth(this.player.currentHealth);
-    },{left: 2, right: 2, top: 2, bottom: 2}, 'heal');
+    this.pickups.spawn(
+      BALANCE.beerHeal.placedOnMap,
+      "🍺",
+      "#6262626c",
+      () => {
+        this.player.beerHeal(BALANCE.beerHeal.healAmount);
+        this.hud.setHealth(this.player.currentHealth);
+      },
+      { left: 2, right: 2, top: 2, bottom: 2 },
+      "heal",
+    );
 
     this.hud.setCash(this.score);
     this.hud.setKills(this.kills);
@@ -100,7 +106,7 @@ export class GameScene extends Phaser.Scene {
       this.player,
       (_player, bullet) => {
         const enemyBullet = bullet as Phaser.GameObjects.Rectangle;
-        const damage = enemyBullet.getData('damage') ?? BALANCE.enemy.bulletDamage;
+        const damage = enemyBullet.getData("damage") ?? BALANCE.enemy.bulletDamage;
         enemyBullet.destroy();
         this.onPlayerHit(damage);
       },
@@ -113,18 +119,18 @@ export class GameScene extends Phaser.Scene {
     this.hud.setEquipedGun(this.weapon.equipedGun, this.kills);
 
     [
-     ...this.projectiles.playerBullets.getChildren(),
-     ...this.projectiles.enemyBullets.getChildren(),
-    ].forEach((bullet)=>{
-     const { x, y } = bullet as Phaser.GameObjects.Rectangle;
-     const smokeTrail = this.add.circle(x, y, 3, 0x808080, 0.5);
+      ...this.projectiles.playerBullets.getChildren(),
+      ...this.projectiles.enemyBullets.getChildren(),
+    ].forEach((bullet) => {
+      const { x, y } = bullet as Phaser.GameObjects.Rectangle;
+      const smokeTrail = this.add.circle(x, y, 3, 0x808080, 0.5);
 
-    this.tweens.add({
-     targets: smokeTrail,
-     alpha: 0,
-     duration: 250,
-     onComplete:()=>smokeTrail.destroy(),
-    });
+      this.tweens.add({
+        targets: smokeTrail,
+        alpha: 0,
+        duration: 250,
+        onComplete: () => smokeTrail.destroy(),
+      });
     });
   }
 
@@ -135,45 +141,49 @@ export class GameScene extends Phaser.Scene {
 
   private setupInput() {
     const keyboard = this.input.keyboard!;
-    keyboard.on('keydown-ONE', () =>{
-      this.hud.showHotbar();
-      this.weapon.equipedGun = 'revolver';
+    keyboard.on("keydown-ESC", this.openPauseMenu, this);
+    this.events.once("shutdown", () => {
+      keyboard.off("keydown-ESC", this.openPauseMenu, this);
     });
-    keyboard.on('keydown-TWO', () =>{
+    keyboard.on("keydown-ONE", () => {
+      this.hud.showHotbar();
+      this.weapon.equipedGun = "revolver";
+    });
+    keyboard.on("keydown-TWO", () => {
       this.hud.showHotbar();
       if (this.kills >= BALANCE.rifleUnlockKills) {
-      this.weapon.equipedGun = 'rifle';
-      }
-     });
-    keyboard.on('keydown-THREE', () =>{
-       this.hud.showHotbar();
-       if (this.kills >= BALANCE.shotgunUnlockKills) {
-      this.weapon.equipedGun = 'shotgun';
+        this.weapon.equipedGun = "rifle";
       }
     });
-    keyboard.on('keydown-FOUR', () =>{
+    keyboard.on("keydown-THREE", () => {
+      this.hud.showHotbar();
+      if (this.kills >= BALANCE.shotgunUnlockKills) {
+        this.weapon.equipedGun = "shotgun";
+      }
+    });
+    keyboard.on("keydown-FOUR", () => {
       this.hud.showHotbar();
       if (this.kills >= BALANCE.dynamiteUnlockKills) {
-      this.weapon.equipedGun = 'dynamite';
+        this.weapon.equipedGun = "dynamite";
       }
     });
-    this.input.on('wheel', (
+    this.input.on("wheel", (
       _pointer: Phaser.Input.Pointer,
       _gameObjects: Phaser.GameObjects.GameObject[],
       _deltaX: number,
       deltaY: number,
     ) => {
-      const availableGuns = ['revolver'];
+      const availableGuns = ["revolver"];
       if (this.kills >= BALANCE.rifleUnlockKills) {
-        availableGuns.push('rifle');
+        availableGuns.push("rifle");
       }
       if (this.kills >= BALANCE.shotgunUnlockKills) {
-        availableGuns.push('shotgun');
+        availableGuns.push("shotgun");
       }
       if (this.kills >= BALANCE.dynamiteUnlockKills) {
-        availableGuns.push('dynamite');
+        availableGuns.push("dynamite");
       }
-      
+
       const currentIndex = availableGuns.indexOf(this.weapon.equipedGun);
       const direction = deltaY > 0 ? 1 : -1;
       const nextIndex = (currentIndex + direction + availableGuns.length) % availableGuns.length;
@@ -182,7 +192,16 @@ export class GameScene extends Phaser.Scene {
     });
     this.fireKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.reloadKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-    this.input.on('pointerdown', () => this.fireAtPointer());
+    this.input.on("pointerdown", () => this.fireAtPointer());
+  }
+
+  private openPauseMenu() {
+    if (this.scene.isActive("MainMenu")) {
+      return;
+    }
+    this.scene.launch("MainMenu", { pauseGame: true });
+    this.scene.bringToTop("MainMenu");
+    this.scene.pause();
   }
 
   private setupRules() {
@@ -201,7 +220,7 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.enemies.group, () => this.onPlayerHit());
     this.physics.add.overlap(this.player, this.projectiles.enemyBullets, (_player, bullet) => {
       const enemyBullet = bullet as Phaser.GameObjects.Rectangle;
-      const damage = enemyBullet.getData('damage') ?? BALANCE.enemy.bulletDamage;
+      const damage = enemyBullet.getData("damage") ?? BALANCE.enemy.bulletDamage;
       enemyBullet.destroy();
       this.onPlayerHit(damage);
     });
@@ -220,7 +239,7 @@ export class GameScene extends Phaser.Scene {
 
   private fireAtPointer() {
     //const pointer = this.input.activePointer;
-    if (this.weapon.equipedGun === 'dynamite') {
+    if (this.weapon.equipedGun === "dynamite") {
       this.placeDynamite();
       return;
     }
@@ -238,7 +257,7 @@ export class GameScene extends Phaser.Scene {
     const radius = BALANCE.dynamite.activationRadius;
     body.setCircle(radius, 12 - radius, 12 - radius);
     this.dynamites.add(dynamite);
-    this.sound.play('sixshooterinsert', { volume: 0.2 });
+    this.sound.play("sixshooterinsert", { volume: 0.2 });
   }
 
   private explodeDynamite(x: number, y: number) {
@@ -250,7 +269,7 @@ export class GameScene extends Phaser.Scene {
       duration: 350,
       onComplete: () => explosion.destroy(),
     });
-    this.sound.play('ricochet-1', { volume: 0.4 });
+    this.sound.play("ricochet-1", { volume: 0.4 });
   }
 
   private onPlayerHit(damage = 1) {
@@ -262,19 +281,19 @@ export class GameScene extends Phaser.Scene {
       volume: Phaser.Math.FloatBetween(0.3, 0.35),
       detune: Phaser.Math.Between(-600, -350),
     });
-    
+
     this.hud.setHealth(this.player.currentHealth);
 
-    if (this.player.currentHealth <= 0){
-    this.score = 0;
-    this.kills = 0;
-    this.scene.start('GameOver');
+    if (this.player.currentHealth <= 0) {
+      this.score = 0;
+      this.kills = 0;
+      this.scene.start("GameOver");
     }
   }
 
   private playMusic() {
-    if (!this.sound.get('bgmusichill')?.isPlaying) {
-      this.sound.add('bgmusichill', { loop: true, volume: 0.05 }).play();
+    if (!this.sound.get("bgmusichill")?.isPlaying) {
+      this.sound.add("bgmusichill", { loop: true, volume: 0.05 }).play();
     }
   }
 }
