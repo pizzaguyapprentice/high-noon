@@ -3,6 +3,23 @@ import { BALANCE } from '../config/balance.ts';
 import { ReloadBar } from '../ui/ReloadBar.ts';
 import { Projectiles } from './Projectiles.ts';
 
+interface WeaponStats {
+  damage: number;
+  maxAmmo: number;
+  reloadPerBullet: number;
+  bulletSpeed: number;
+  fireDelay: number;
+  pellets: number;
+  minSpread: number;
+  spreadPerShot: number;
+  maxSpread: number;
+  cursorCooldown: number;
+  minCircleScale: number;
+  maxCircleScale: number;
+  range: number;
+  movementPenalty: number;
+}
+
 export interface AmmoState {
   ammo: number;
   maxAmmo: number;
@@ -18,19 +35,36 @@ export class Weapon {
   private reloadEndsAt = 0;
   private shotTimes: number[] = [];
   private reloadBar: ReloadBar;
-  private gun = 'revolver';
-  private shotDelay = 0; 
+  private gun = "revolver";
+  private shotDelay = 0;
+  private lastPositionX = 0;
+  private lastPositionY = 0;
+  private isMoving = false;
+  private lastMovedAt = 0;
+
 
   constructor(
     private scene: Phaser.Scene,
     private owner: { x: number; y: number },
     private projectiles: Projectiles,
     private onAmmoChanged: (state: AmmoState) => void,
-  ) {
+  ) 
+  {
     this.reloadBar = new ReloadBar(scene, 0x2ecc71);
+    this.lastPositionX = owner.x;
+    this. lastPositionY = owner.y;
     this.notify();
   }
-
+  private get stats(): WeaponStats{
+    switch (this.gun) {
+      case "rifle":
+        return BALANCE.rifle;
+      case "shotgun":
+        return BALANCE.shotgun;
+      default:
+        return BALANCE.revolver;
+    }
+  }
   get equipedGun(): string {
     return this.gun;
   }
@@ -42,27 +76,25 @@ export class Weapon {
     this.cancelReload();
     this.savedAmmo[this.gun] = this.ammo;
     this.gun = name;
+    this.shotTimes = [];
+
     if (this.savedAmmo[name] === undefined) {
       this.ammo = this.maxAmmo;
-    } else {
+    }
+    else{
       this.ammo = this.savedAmmo[name];
     }
     this.notify();
   }
 
   private get maxAmmo(): number {
-    if (this.equipedGun === 'dynamite') {
+    if (this.equipedGun === "dynamite") {
       return 3;
     }
-    if (this.equipedGun === 'shotgun') {
-      return 2;
+    else{
+      return this.stats.maxAmmo;
     }
-    if (this.equipedGun === 'rifle') {
-      return 8;
-    }
-    return BALANCE.revolver.maxAmmo;
   }
-
   get isReloading(): boolean {
     return this.reloading;
   }
@@ -78,102 +110,98 @@ export class Weapon {
   }
 
   fire(targetX: number, targetY: number, spreadRadius: number): boolean {
+    const {bulletSpeed,damage,pellets,fireDelay,cursorCooldown} = this.stats;
+    //not shooting dynamtie
     if (this.equipedGun === 'dynamite') {
       return false;
     }
-
-    if(this.scene.time.now < this.shotDelay){
+    //Cannot shoot while waiting for the weapon delay to end
+    const now = this.scene.time.now;
+    
+    if(now < this.shotDelay){
       return false;
     }
 
+    //Cancel reload if the player shoots
     if (this.reloading) {
       if (this.ammo <= 0) {
         return false;
       }
       this.cancelReload();
     }
+    
+    //Cannot shoot while no ammo
     if (this.ammo <= 0) {
       return false;
     }
-    //
+    this.shotDelay = this.scene.time.now + fireDelay;
 
+    
+    //Coords of where bullet starts
     const from = new Phaser.Math.Vector2(this.owner.x, this.owner.y);
+    //Coords of where bullet ends 
     const target = new Phaser.Math.Vector2(targetX, targetY);
-    const sideline = target.clone().subtract(from).normalize().rotate(Math.PI/2);
+    //Line between cursor and player
+    const direction = target.clone().subtract(from).normalize();
 
-    let speed: number = BALANCE.revolver.bulletSpeed;
-    let damage: number = BALANCE.revolver.damage;
+    //creating the circle at the end.
+    const coneCenter =  target.clone();
+    //Taken from getSpread, value is in pixels
+    const coneRadius = spreadRadius;
 
-    if(this.equipedGun === 'rifle'){
-      speed = 2000;
-      damage = 4;
-      this.shotDelay = this.scene.time.now + 500;
-    }
-
+    // queue up the shots for the reticle to decrease in size after expanding.
+    this.shotTimes = this.shotTimes.filter(t => now - t < cursorCooldown);
+    this.shotTimes.push(now);
     this.ammo -= 1;
     this.notify();
 
-    const now = this.scene.time.now;
-    this.shotTimes = this.shotTimes.filter(t => now - t < BALANCE.revolver.cursorCooldown);
-    this.shotTimes.push(now);
-    let pelletCount = 1;
-    if (this.equipedGun === 'shotgun') {
-      this.shotDelay = this.scene.time.now + 1000;
-      pelletCount = 5;
-      damage = 1;
-    }
-
     
-    for (let i = 0; i < pelletCount; i++) {
-      const offset = Phaser.Math.FloatBetween(-spreadRadius,spreadRadius);
-      const crossingpoint = target.clone().add(sideline.clone().scale(offset));
-      //10-20 pixels overshoot
-      const overshoot = Phaser.Math.FloatBetween(10, 20);
-      const pelletdirection = crossingpoint.clone().subtract(from).normalize();
-      const landing = crossingpoint.clone().add(pelletdirection.scale(overshoot));
-      //const x = targetX + Phaser.Math.Between(-spreadRadius, spreadRadius);
-      //const y = targetY + Phaser.Math.Between(-spreadRadius, spreadRadius);
+    for (let i = 0; i < pellets; i++) {
+      //In radians, picks an angle in the 180 degree semicircle
+      const angle = Phaser.Math.FloatBetween(-Math.PI/2,Math.PI/2);
+      //trueArea prevents grouping up of shots in the center because of r^2
+      const trueArea = coneRadius * Math.sqrt(Math.random());
+      //Clones the Coords of target, gives vector with the angle and scales the randomization with trueArea
+      const landing = coneCenter.clone().add(direction.clone().rotate(angle).scale(trueArea));
 
-      this.projectiles.firePlayerBullet(from.x, from.y, landing.x, landing.y, speed,damage);
+      this.projectiles.firePlayerBullet(from.x, from.y, landing.x, landing.y, bulletSpeed, damage);
     }
-
+    //Audio for shooting
     this.scene.sound.play('sixshootershot', { volume: 0.2 });
+
     return true;
   }
 
   getSpread(distance: number): number {
+    const {minSpread, spreadPerShot, maxSpread, cursorCooldown, minCircleScale, maxCircleScale, range} = this.stats;
+
     const now = this.scene.time.now;
-    const recentShots = this.shotTimes.filter(t => now - t < BALANCE.revolver.cursorCooldown).length;
-    const baseSpread = Math.min(
-      BALANCE.revolver.minSpread + recentShots * BALANCE.revolver.spreadPerShot,
-      BALANCE.revolver.maxSpread,
-    );
-    const distanceScale = Phaser.Math.Clamp(
-      distance / BALANCE.revolver.range,
-      BALANCE.revolver.minCircleScale,
-      BALANCE.revolver.maxCircleScale,
-    );
-    if (this.equipedGun === 'rifle') {
-      return baseSpread * distanceScale / 3;
+    //list of timestamps, in miliseconds from the moment each shot was fired., how many of those
+    const recentShots = this.shotTimes.filter(t => now - t < cursorCooldown).length;
+    //Calculate spread based on recent shots, is in pixels
+    const baseSpread = Math.min(minSpread + (recentShots*spreadPerShot),maxSpread);
+    //Each weapon has range, past the range point, the spread gets larger, before the range point, the spread gets smaller
+    const distanceScale = Phaser.Math.Clamp(distance/range, minCircleScale,maxCircleScale);
+    if(this.isMoving){
+      return baseSpread * distanceScale * this.stats.movementPenalty;
     }
-    if (this.equipedGun === 'shotgun') {
-      return baseSpread * distanceScale * 2;
+    else{
+      return baseSpread * distanceScale;
     }
-    return baseSpread * distanceScale;
   }
 
   startReload() {
     if (this.equipedGun === 'dynamite' || this.reloading || this.ammo >= this.maxAmmo) {
       return;
     }
+    const {reloadPerBullet} = this.stats
     this.reloading = true;
     this.reloadStartedAt = this.scene.time.now;
-    this.reloadEndsAt = this.reloadStartedAt
-      + (this.maxAmmo - this.ammo) * BALANCE.revolver.reloadPerBullet;
+    this.reloadEndsAt = this.reloadStartedAt + (this.maxAmmo - this.ammo) * reloadPerBullet;
     this.notify();
 
     this.reloadTimer = this.scene.time.addEvent({
-      delay: BALANCE.revolver.reloadPerBullet,
+      delay: reloadPerBullet,
       loop: true,
       callback: () => {
         this.ammo += 1;
@@ -202,12 +230,25 @@ export class Weapon {
   }
 
   update() {
+    //Tracking for playermovement to apply movement penalty
+    const now = this.scene.time.now;
+
+    if (this.owner.x !== this.lastPositionX || this.owner.y !== this.lastPositionY) {
+      this.lastMovedAt = now;
+    }
+    
+    this.lastPositionX = this.owner.x;
+    this.lastPositionY = this.owner.y;
+    this.isMoving = now-this.lastMovedAt<100;
+    
     if (!this.reloading) {
       this.reloadBar.hide();
       return;
     }
     const duration = Math.max(this.reloadEndsAt - this.reloadStartedAt, 1);
     const remaining = Math.max(this.reloadEndsAt - this.scene.time.now, 0);
+    
+
     this.reloadBar.show(this.owner.x, this.owner.y, 1 - remaining / duration, remaining);
   }
 

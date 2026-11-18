@@ -1,27 +1,21 @@
 import * as Phaser from 'phaser';
 import { Weapon } from '../systems/Weapon.ts';
 
-const SMOOTHING = 0.2;
-
-
 export class AimReticle {
-  //circle: Phaser.GameObjects.Arc;
   private currentRadius = 0;
   readonly cone: Phaser.GameObjects.Graphics;
   readonly aim = new Phaser.Math.Vector2(); 
-  
 
   constructor(
-
     private scene: Phaser.Scene,
     private owner: { x: number; y: number },
     private weapon: Weapon,)
     {
+    //Cone is a GameObject.Graphics
     this.cone = scene.add.graphics().setDepth(10);
-    //this.circle = scene.add.circle(0, 0, 0, 0xff0000, 0.25)
-    //.setStrokeStyle(1, 0xff0000, 0.5)
-    //.setDepth(10);
+    //Setting the cursor
     scene.input.setDefaultCursor('crosshair');
+
     }
     get radius(): number {
       return this.currentRadius;
@@ -32,13 +26,21 @@ export class AimReticle {
     const world = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
     this.aim.set(world.x,world.y);
 
-    const distance = Phaser.Math.Distance.Between(this.owner.x, this.owner.y, this.aim.x, this.aim.y);
-    const targetRadius = this.weapon.getSpread(distance);
-    this.currentRadius = Phaser.Math.Linear(this.currentRadius, targetRadius, SMOOTHING);
-    this.drawCone(distance);
+    let distance = Phaser.Math.Distance.Between(this.owner.x, this.owner.y, this.aim.x, this.aim.y);
     
-    //this.circle.setRadius(this.currentRadius);
-    //this.circle.setPosition(pointer.worldX, pointer.worldY);
+    //If the cursor is to close, clamp the reticle the distance (60px)
+    const clampDistance = 100;
+    if(distance < clampDistance){
+      const angle = Phaser.Math.Angle.Between(this.owner.x,this.owner.y, world.x, world.y);
+      this.aim.set(this.owner.x + Math.cos(angle)*clampDistance, this.owner.y + Math.sin(angle)*clampDistance);
+      distance = 100;
+    }
+    //getSpread function is in weapon.ts, so that the actually drawn cone matches the bullet range
+    const targetRadius = this.weapon.getSpread(distance);
+    //Linearily change the radius for a nicer look
+    this.currentRadius = Phaser.Math.Linear(this.currentRadius, targetRadius, 0.2);
+    //draw the cone with the distance between the player and the pointer
+    this.drawCone(distance);
   }
 
   private drawCone(distance: number){
@@ -47,29 +49,30 @@ export class AimReticle {
 
     const playerx = this.owner.x;
     const playery = this.owner.y;
-    const direcitonx = (this.aim.x - playerx) / distance;
-    const directiony = (this.aim.y - playery) / distance;
+    //Direction vectors
+    const direcitonx = (this.aim.x-playerx) / distance;
+    const directiony = (this.aim.y-playery) / distance;
     //perpendicular lines
     const perpx = -directiony;
     const perpy = direcitonx;
 
+    //edges of the cone
+    const edge = (distanceAlong:number, side:number) =>{
 
-    const edge = (intersect:number, side:number) =>{
+      //direction is based off of player position
+      const centerx = playerx + direcitonx * distanceAlong;
+      const centery = playery + directiony * distanceAlong;
+      // ranges from 0-1
+      const progress = distanceAlong/distance;
+      const halfWidth = this.currentRadius*progress;
 
-      const centerx = playerx + direcitonx * intersect;
-      const centery = playery + directiony * intersect;
-
-      //between 0 and the cursor
-      const completion = intersect/distance;
-      const halfwidth = this.currentRadius*completion;
-
-      const edgex = centerx + perpx * halfwidth * side;
-      const edgey = centery + perpy * halfwidth * side;
+      const edgex = centerx + perpx * halfWidth * side;
+      const edgey = centery + perpy * halfWidth * side;
 
       return new Phaser.Math.Vector2(edgex,edgey);
 
     };
-
+    //Draws a rectangle with using four points
     const band = (from:number, to:number, alpha:number)=>{
       const nearleft = edge(from,-1);
       const farleft = edge(to,-1);
@@ -79,11 +82,8 @@ export class AimReticle {
       cone.fillPoints([nearleft,farleft,farright,nearright], true);
     };
 
-    //20 pixels overshoot
 
-    const overshoot =  30;
-    const end = distance + overshoot;
-    //60% of the cone
+    const end = distance ;
     const start = distance * 0.6;
     const length = end - start;
     for (let i = 0; i < 16; i++) {
@@ -92,9 +92,13 @@ export class AimReticle {
       band(from, to,0.2 *((i+1)/ 16));
     }
     
-    const left = edge(distance,-1);
-    const right = edge(distance, 1);
-    cone.lineStyle(2,0xff0000,0.2);
-    cone.lineBetween(left.x,left.y,right.x,right.y);
+    const lineCenter = edge(end, 0);                         
+    const lineRadius = this.currentRadius*(end/distance);
+    const aimAngle = Math.atan2(directiony, direcitonx);
+
+    cone.fillStyle(0xff0000, 0.2);
+    cone.slice(lineCenter.x, lineCenter.y, lineRadius, aimAngle - Math.PI / 2, aimAngle + Math.PI / 2, false);
+    cone.fillPath();
+
   }
 }
