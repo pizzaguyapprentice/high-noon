@@ -427,9 +427,9 @@ private updateHorsePrompt() {
   if (this.horse.owned) {
     this.horsePrompt.setText('E: Ride');
   } else if (this.score >= BALANCE.horse.price) {
-    this.horsePrompt.setText(`E: Buy horse ($${BALANCE.horse.price})`);
+    this.horsePrompt.setText(`E: Buy honse ($${BALANCE.horse.price})`);
   } else {
-    this.horsePrompt.setText(`Horse: $${BALANCE.horse.price}`);
+    this.horsePrompt.setText(`Honse: $${BALANCE.horse.price}`);
   }
 }
 
