@@ -9,7 +9,7 @@ import { Hud } from "../../ui/Hud.ts";
 import { AimReticle } from "../../ui/AimReticle.ts";
 import { Pathfinder } from "../../systems/Pathfinder.ts";
 import { BALANCE } from "../../config/balance.ts";
-
+import { Horse } from '../../entities/Horse.ts';
 const PLAYER_SPAWN = { x: 100, y: 100 };
 
 // const ENEMY_WAVE: SpawnPoint[] = [
@@ -35,9 +35,13 @@ export class GameScene extends Phaser.Scene {
   private hud!: Hud;
   private pathfinder!: Pathfinder;
   private dynamites!: Phaser.Physics.Arcade.Group;
-
+  private horse!: Horse;
+  private interactKey!: Phaser.Input.Keyboard.Key;
+  private horsePrompt!: Phaser.GameObjects.Text;
+  private riding = false;
   private fireKey!: Phaser.Input.Keyboard.Key;
   private reloadKey!: Phaser.Input.Keyboard.Key;
+  private defaultZoom = 1;
 
   constructor() {
     super("GameScene");
@@ -51,15 +55,24 @@ export class GameScene extends Phaser.Scene {
     const playerSpawn = this.level.getSpawns("player")[0] ?? PLAYER_SPAWN;
     this.player = new Player(this, playerSpawn.x, playerSpawn.y, this.level.walls);
 
+    //not mounted upon death
+    this.riding = false;
+    //honse spawns 60 pixels to the right of the player
+    this.horse = new Horse(this, playerSpawn.x + 60, playerSpawn.y);
+    this.events.on(Phaser.Scenes.Events.PRE_RENDER, this.syncHorse, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.PRE_RENDER, this.syncHorse, this));
+    //this.physics.add.collider(this.horse, this.level.walls, () => this.horse.onBump());
+    this.interactKey = this.input.keyboard!.addKey('E');
+    this.horsePrompt = this.add.text(0, 0,'', { fontSize:'12px',color: '#000'}).setOrigin(0.5).setDepth(22).setVisible(false);
+    
+    
     this.hud = new Hud(this, this.player, this.level);
     this.weapon = new Weapon(this, this.player, this.projectiles, ({ ammo, maxAmmo, reloading }) => {
       this.hud.setAmmo(ammo, maxAmmo, reloading);
     });
     this.reticle = new AimReticle(this, this.player, this.weapon);
 
-    //this.hud.minimap.ignore(this.reticle.circle);
     this.hud.minimap.ignore(this.reticle.cone);
-
     this.enemies = new EnemyManager(this, this.level, this.player, this.projectiles, this.pathfinder);
     this.enemies.spawnWave(this.level.getSpawns("enemy"));
     this.dynamites = this.physics.add.group();
@@ -125,7 +138,26 @@ export class GameScene extends Phaser.Scene {
     this.playMusic();
   }
 
-  update() {
+  update(_time:number, delta:number) {
+    if (Phaser.Input.Keyboard.JustDown(this.fireKey)) {
+      this.fireAtPointer();
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.reloadKey)) {
+      this.weapon.startReload();
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.interactKey)) {
+      this.toggleHorse();
+    }
+
+    if (this.riding) {
+      this.horse.ride(delta, this.player.body as Phaser.Physics.Arcade.Body);
+    } else {
+      this.horse.idle();
+    }
+    this.player.update(this.weapon.isReloading, this.riding);
+    this.updateHorsePrompt();
+
+
     if (Phaser.Input.Keyboard.JustDown(this.fireKey)) {
       this.fireAtPointer();
     }
@@ -133,7 +165,7 @@ export class GameScene extends Phaser.Scene {
       this.weapon.startReload();
     }
 
-    this.player.update(this.weapon.isReloading);
+    //this.player.update(this.weapon.isReloading);
     this.enemies.update(this.kills);
     this.enemies.tracePlayerBullets(this.game.loop.delta);
     this.projectiles.traceEnemyBullets(
@@ -166,11 +198,14 @@ export class GameScene extends Phaser.Scene {
         onComplete: () => smokeTrail.destroy(),
       });
     });
+
+
   }
 
   private setupCamera() {
     this.cameras.main.setBounds(0, 0, this.level.width, this.level.height);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+    this.defaultZoom = this.cameras.main.zoom;
   }
 
   private setupInput() {
@@ -324,7 +359,85 @@ export class GameScene extends Phaser.Scene {
       this.scene.start("GameOver");
     }
   }
+  //
+  private toggleHorse() {
+  if (this.riding) {
+    this.dismount();
+    return;
+  }
 
+  const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.horse.x, this.horse.y);
+  if (distance > BALANCE.horse.mountRange) {
+    return;
+  }
+
+  if (!this.horse.owned) {
+    if (this.score < BALANCE.horse.price) {
+      return; // can't afford it; the prompt already says so
+    }
+    this.score -= BALANCE.horse.price; // remove this line to make $150 a requirement instead of a cost
+    this.hud.setCash(this.score);
+    this.horse.owned = true;
+  }
+
+  this.mount();
+}
+
+private mount() {
+  const body = this.player.body as Phaser.Physics.Arcade.Body;
+  body.reset(this.horse.x, this.horse.y); 
+  this.player.setDepth(this.horse.depth+1);
+
+  this.riding = true;
+  this.horse.mount();
+  this.sound.play('horseneigh', { volume: 0.4 });
+  this.pickups.collectEnabled = false;
+  this.cameras.main.zoomTo(this.defaultZoom*0.90,600, 'Sine.easeInOut');
+}
+
+private dismount() {
+  this.riding = false;
+  this.horse.dismount();
+
+  //step off to the horse's right side or its left if there's a wall
+  const side = new Phaser.Math.Vector2(0, 24).rotate(this.horse.rotation);
+  let x = this.horse.x + side.x;
+  let y = this.horse.y + side.y;
+  if (this.level.walls.getTileAtWorldXY(x, y)?.collides) {
+    x = this.horse.x - side.x;
+    y = this.horse.y - side.y;
+  }
+
+  const body = this.player.body as Phaser.Physics.Arcade.Body;
+  body.reset(x, y); 
+  this.pickups.collectEnabled = true;
+  this.cameras.main.zoomTo(this.defaultZoom, 600, 'Sine.easeInOut');
+}
+
+private updateHorsePrompt() {
+  const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.horse.x, this.horse.y);
+  const showPrompt = !this.riding && distance <= BALANCE.horse.mountRange;
+
+  this.horsePrompt.setVisible(showPrompt);
+  if (!showPrompt) {
+    return;
+  }
+
+  this.horsePrompt.setPosition(this.horse.x, this.horse.y - 24);
+  if (this.horse.owned) {
+    this.horsePrompt.setText('E: Ride');
+  } else if (this.score >= BALANCE.horse.price) {
+    this.horsePrompt.setText(`E: Buy horse ($${BALANCE.horse.price})`);
+  } else {
+    this.horsePrompt.setText(`Horse: $${BALANCE.horse.price}`);
+  }
+}
+
+    private syncHorse() {
+      if (this.riding) {
+        this.horse.setPosition(this.player.x, this.player.y);
+      }
+    }
   private playMusic() {
     if (!this.sound.get("bgmusichill")?.isPlaying) {
       this.sound.add("bgmusichill", { loop: true, volume: 0.05 }).play();

@@ -50,6 +50,8 @@ export class Preloader extends Scene{
         for (let i = 0; i <= 3; i++) {
             this.load.audio(`playerhit${i}`, `sounds/sfx/gunshots/playerhit/playerhit${i}.wav`);
         }
+        this.load.audio('horseneigh', 'sounds/sfx/horse/horseneigh.mp3');
+        this.load.audio('horsego', 'sounds/sfx/horse/horsego.mp3');
         this.load.image('logo', 'logo.png');
         this.load.audio('sixshootershot','sounds/sfx/gunshots/revolver/sixshootershot.mp3');
         this.load.audio('introjingle','sounds/sfx/introjingle.mp3');

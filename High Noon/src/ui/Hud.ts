@@ -22,6 +22,7 @@ export class Hud {
 
   hudGroup: Phaser.GameObjects.Group;
   minimap;
+  uiCamera: Phaser.Cameras.Scene2D.Camera;
   playerDot: Phaser.GameObjects.Arc;
 
   constructor(scene: Phaser.Scene, player: Player, level: Level) {
@@ -73,7 +74,7 @@ export class Hud {
     ]);
     const minimapH = 250;
     const minimapW = 250;
-
+    this.uiCamera = scene.cameras.add(0, 0, scene.scale.width, scene.scale.height);
     this.minimap = scene.cameras.add(
     scene.scale.width - minimapW - 15,
     scene.scale.height - minimapH- 15,
@@ -105,8 +106,27 @@ export class Hud {
 
     this.playerDot = scene.add.circle(player.x, player.y, 70, 0x0);
     this.playerDot.setDepth(100);
+    const uiObjects: Phaser.GameObjects.GameObject[] = [...this.hudGroup.getChildren(), minimapBorder]
+    const isUi = (obj: Phaser.GameObjects.GameObject) => uiObjects.includes(obj);
     //so doesnt show on main non minimap screen
+    //main camera doesnt draw the HUD
+    scene.cameras.main.ignore(uiObjects);
     scene.cameras.main.ignore(this.playerDot);
+
+    scene.children.list.forEach(obj => {
+      if (!isUi(obj)) this.uiCamera.ignore(obj);
+    });
+    const ignoreNew = (obj: Phaser.GameObjects.GameObject) => {
+      if (!isUi(obj)){
+        this.uiCamera.ignore(obj);
+      }
+    };
+    //ignore everything else
+    scene.events.on(Phaser.Scenes.Events.ADDED_TO_SCENE, ignoreNew);
+
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      scene.events.off(Phaser.Scenes.Events.ADDED_TO_SCENE, ignoreNew);
+    });
   }
 
   setHealth(health: number){

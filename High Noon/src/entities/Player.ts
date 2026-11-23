@@ -72,8 +72,13 @@ export class Player extends Phaser.GameObjects.Rectangle {
     return true;
   }
 
-  update(slowed: boolean) {
+  update(slowed: boolean, riding = false) {
     this.updateHealthBar();
+    //the honse controls movement
+    if (riding) {
+      return;
+    }
+      
     const input = this.readMoveInput();
 
     if (Phaser.Input.Keyboard.JustDown(this.dodgeKey)) {

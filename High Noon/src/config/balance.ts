@@ -2,6 +2,16 @@ export const BALANCE = {
   rifleUnlockKills: 2,
   shotgunUnlockKills: 3,
   dynamiteUnlockKills: 4,
+  horse: {
+    price:10,
+    mountRange:40,
+    //px per second
+    acceleration:200, 
+    deceleration: 400,
+    speeds:{stand: 0, walk:70,trot:140,canter:220,gallop:320},
+    //radians per second
+    turnRates:{stand:3,walk:3,trot:2.5,canter:2,gallop:1.4}
+  },
   player: {
     maxHealth: 4,
     speed: 100,
